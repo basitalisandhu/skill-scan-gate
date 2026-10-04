@@ -360,6 +360,17 @@ class Scanner:
             self.add("SSG604", rel, line, text.splitlines()[0] if text else "", "no description in front matter")
         else:
             desc, line = fm["description"]
+        # Strict YAML rejects unquoted scalars that contain ": " (nested mapping).
+        raw_lines = text.splitlines()
+        for key, (val, ln) in fm.items():
+            if ln-1 < len(raw_lines):
+                raw = raw_lines[ln-1]
+                m = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", raw)
+                if not m:
+                    continue
+                value = m.group(2).strip()
+                if value and value[0] not in ("'", '"', "|", ">") and ": " in value:
+                    self.add("SSG607", rel, ln, raw, f"unquoted {key} contains ': '")
             if P.ALWAYS_RUN.search(desc):
                 self.add("SSG605", rel, line, desc)
         if fm and fm.get("name", ("", 0))[0]:
