@@ -234,6 +234,13 @@ _RULES = [
         "Describe the specific tasks the skill is for; a skill that asks to run on every request crowds out the user's intent.",
     ),
     Rule(
+        "SSG607",
+        "manifest",
+        MEDIUM,
+        "Front matter breaks strict YAML parsers",
+        "Quote description (and other) values that contain ': ' — Claude Code is lenient, strict YAML parsers are not, and the skill is skipped.",
+    ),
+    Rule(
         "SSG606",
         "manifest",
         MEDIUM,

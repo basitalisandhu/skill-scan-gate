@@ -125,3 +125,44 @@ def test_front_matter_parser_handles_quotes_and_blocks():
 def test_write_tree_adds_repo_files(tmp_path):
     root = write_tree(tmp_path / "r", {})
     assert (root / "LICENSE").is_file() and (root / "SECURITY.md").is_file()
+
+def test_flags_unquoted_description_with_colon_space():
+    body = """---
+name: plan-review
+description: Review a plan: scope, risks
+---
+
+# plan-review
+"""
+    ids = set()
+    # reuse conftest helper pattern
+    from skill_scan_gate.scanner import scan
+    from pathlib import Path
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td)/"skills"/"plan-review"/"SKILL.md"
+        p.parent.mkdir(parents=True)
+        p.write_text(body)
+        res = scan(Path(td))
+        rules = {f.rule for f in res.findings}
+    assert "SSG607" in rules
+
+
+def test_quoted_description_with_colon_space_is_clean():
+    body = """---
+name: plan-review
+description: "Review a plan: scope, risks"
+---
+
+# plan-review
+"""
+    from skill_scan_gate.scanner import scan
+    from pathlib import Path
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td)/"skills"/"plan-review"/"SKILL.md"
+        p.parent.mkdir(parents=True)
+        p.write_text(body)
+        res = scan(Path(td))
+        rules = {f.rule for f in res.findings}
+    assert "SSG607" not in rules
