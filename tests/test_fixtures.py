@@ -35,6 +35,7 @@ PLANTED_EXPECTED = {
     "SSG604",
     "SSG605",
     "SSG606",
+    "SSG607",
     "SSG701",
     "SSG702",
 }

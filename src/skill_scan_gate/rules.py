@@ -242,6 +242,13 @@ _RULES = [
     ),
     # (g) repository hygiene
     Rule(
+        "SSG607",
+        "manifest",
+        LOW,
+        "Skill declares unrestricted Bash access",
+        "Scope Bash to the commands the skill needs instead of declaring Bash or Bash(*).",
+    ),
+    Rule(
         "SSG701",
         "repository",
         LOW,

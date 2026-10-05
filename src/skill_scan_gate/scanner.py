@@ -366,6 +366,12 @@ class Scanner:
             name, line = fm["name"]
             if any(w in name.lower() for w in P.RESERVED_WORDS):
                 self.add("SSG603", rel, line, f"name: {name}")
+        if fm and "allowed-tools" in fm:
+            tools, line = fm["allowed-tools"]
+            # The existing small parser joins block-list lines with spaces.
+            entries = re.split(r",|\s+-\s+", tools.strip("[]").lstrip())
+            if any(entry.strip().removeprefix("- ").strip().strip("\"'") in {"Bash", "Bash(*)"} for entry in entries):
+                self.add("SSG607", rel, line, tools, f"allowed-tools: {tools}")
 
     # ---------------------------------------------------------------- manifests
 
