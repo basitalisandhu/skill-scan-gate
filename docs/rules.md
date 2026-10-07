@@ -1,6 +1,6 @@
 # Rules
 
-skill-scan-gate has 31 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
+skill-scan-gate has 32 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
 
 The rules are text heuristics: nothing is executed and nothing is fetched. They catch the common, obvious shapes; a clean scan means nothing obvious matched, not that a repository is safe. See [false-positives.md](false-positives.md) for baselines and allowlists.
 

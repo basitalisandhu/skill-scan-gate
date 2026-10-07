@@ -6,7 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
 - Add SSG607 (low) for unrestricted Bash in skill `allowed-tools`, with scoped-command negatives and a planted fixture.
+
 ## [0.1.0] - 2026-10-04
 
 ### Added
