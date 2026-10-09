@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Add SSG607 (low) for unrestricted Bash in skill `allowed-tools`, with scoped-command negatives and a planted fixture.
+- `scan --blob-min N` and `baseline --blob-min N`: configurable minimum length for SSG203 base64 blob detection (default 200, minimum 64; hex threshold stays 56 characters longer); threshold is recorded in the JSON report as `blobMin`.
 
 ## [0.1.0] - 2026-10-04
 
