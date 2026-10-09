@@ -1,6 +1,6 @@
 # Rules
 
-skill-scan-gate has 31 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
+skill-scan-gate has 32 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
 
 The rules are text heuristics: nothing is executed and nothing is fetched. They catch the common, obvious shapes; a clean scan means nothing obvious matched, not that a repository is safe. See [false-positives.md](false-positives.md) for baselines and allowlists.
 
@@ -41,6 +41,7 @@ Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`
 | [SSG604](#ssg604) | medium | Skill has no description |
 | [SSG605](#ssg605) | medium | Skill description claims it should always run |
 | [SSG606](#ssg606) | medium | Configuration file is not valid JSON |
+| [SSG607](#ssg607) | low | Skill declares unrestricted Bash access |
 | [SSG701](#ssg701) | low | No SECURITY.md |
 | [SSG702](#ssg702) | low | No LICENSE file |
 
@@ -299,6 +300,14 @@ Remediation: Describe the specific tasks the skill is for; a skill that asks to 
 What it catches: hooks/hooks.json, .mcp.json, settings.json or a .claude-plugin JSON file that does not parse. The scanner cannot check a file it cannot read, so this is reported rather than skipped.
 
 Remediation: Fix the JSON syntax; Claude Code skips or rejects a file it cannot parse, and so does this scanner.
+
+### SSG607
+
+**Skill declares unrestricted Bash access.** Severity: low
+
+What it catches: `allowed-tools` containing exact `Bash` or `Bash(*)`, in comma-separated, flow-list or block-list form. Scoped command declarations such as `Bash(git status *)` are not flagged. This is a breadth warning, not a claim that declaring a tool executes it.
+
+Remediation: Scope Bash to the commands the skill needs.
 
 ## Repository files (SSG7xx)
 

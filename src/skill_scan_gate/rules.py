@@ -240,6 +240,13 @@ _RULES = [
         "Configuration file is not valid JSON",
         "Fix the JSON syntax; Claude Code skips or rejects a file it cannot parse, and so does this scanner.",
     ),
+    Rule(
+        "SSG607",
+        "manifest",
+        LOW,
+        "Skill declares unrestricted Bash access",
+        "Scope Bash to the commands the skill needs instead of declaring Bash or Bash(*).",
+    ),
     # (g) repository hygiene
     Rule(
         "SSG701",

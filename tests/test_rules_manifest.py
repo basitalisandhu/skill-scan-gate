@@ -87,6 +87,21 @@ def test_ssg605_folded_description(tree):
     assert "SSG605" in rule_ids(tree({"skills/s/SKILL.md": body}))
 
 
+@pytest.mark.parametrize("value", ["Bash", "Read, Bash(*)", "[Read, Bash]", "\n  - Read\n  - Bash(*)"])
+def test_ssg607_unrestricted_bash(tree, value):
+    body = f"---\nname: tidy\ndescription: Format notes.\nallowed-tools: {value}\n---\n"
+    findings = [f for f in scan(tree({"skills/s/SKILL.md": body})).findings if f.rule == "SSG607"]
+    assert len(findings) == 1
+    assert findings[0].severity == "low"
+    assert findings[0].line == 4
+
+
+@pytest.mark.parametrize("value", ["Read, Grep", "Bash(git status *)", "\n  - Bash(npm test)\n  - Read", "NotBash"])
+def test_ssg607_scoped_or_non_shell_tools_are_clean(tree, value):
+    body = f"---\nname: tidy\ndescription: Format notes.\nallowed-tools: {value}\n---\n"
+    assert "SSG607" not in rule_ids(tree({"skills/s/SKILL.md": body}))
+
+
 @pytest.mark.parametrize(
     "path", [".mcp.json", "hooks/hooks.json", ".claude-plugin/plugin.json", ".claude/settings.json"]
 )
