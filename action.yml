@@ -18,6 +18,10 @@ inputs:
     description: "Baseline file written by `skill-scan-gate baseline`. Only findings not in it count towards the gate."
     required: false
     default: ""
+  blob-min:
+    description: "Minimum base64 run length for SSG203 (long encoded blob). The CLI default is 200 and the minimum is 64."
+    required: false
+    default: "200"
   allow:
     description: "Allowlist file (see docs/false-positives.md). Protect it with CODEOWNERS."
     required: false
@@ -81,6 +85,7 @@ runs:
         SCAN_PATH: ${{ inputs.path }}
         FAIL_ON: ${{ inputs.fail-on }}
         BASELINE: ${{ inputs.baseline }}
+        BLOB_MIN: ${{ inputs.blob-min }}
         ALLOW: ${{ inputs.allow }}
         EXCLUDE: ${{ inputs.exclude }}
         SARIF: ${{ inputs.sarif }}
@@ -94,6 +99,7 @@ runs:
         # The scanner runs from the action's own checkout, so it is pinned to the ref in `uses:`.
         args=(scan "$SCAN_PATH" --fail-on "$FAIL_ON" --summary "$GITHUB_STEP_SUMMARY" --github-output "$GITHUB_OUTPUT")
         if [ -n "$BASELINE" ]; then args+=(--baseline "$BASELINE"); fi
+        if [ -n "$BLOB_MIN" ]; then args+=(--blob-min "$BLOB_MIN"); fi
         if [ -n "$ALLOW" ]; then args+=(--allow "$ALLOW"); fi
         while IFS= read -r glob; do
           if [ -n "$glob" ]; then args+=(--exclude "$glob"); fi

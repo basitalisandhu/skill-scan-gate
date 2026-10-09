@@ -76,6 +76,7 @@ The Action runs the scanner from its own checkout, so the code that runs is the 
 | `path` | `.` | Directory to scan, relative to the workspace. |
 | `fail-on` | `high` | Lowest severity that fails the job: `low`, `medium`, `high` or `none`. |
 | `baseline` | empty | Baseline file; only findings not in it count. |
+| `blob-min` | `200` | Minimum base64 run length for SSG203; lower it to catch shorter encoded blobs (minimum 64). Same as `scan --blob-min`. |
 | `allow` | empty | Allowlist file of documented exceptions. |
 | `exclude` | empty | Path globs to skip, one per line. |
 | `sarif` | `true` | Write a SARIF report. |

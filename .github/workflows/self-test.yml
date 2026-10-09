@@ -54,6 +54,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/fixture-secrets
           fail-on: high
+          blob-min: "120"
           upload-sarif: "false"
           sarif-file: secrets.sarif
 
