@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-09
+
 ### Added
 
 - Action input `blob-min`, passed to `scan --blob-min`, so the Action can lower the SSG203 threshold like the CLI.
@@ -24,5 +26,6 @@ All notable changes to this project are documented here. The format follows
 - Composite GitHub Action (`action.yml`) with inputs `path`, `fail-on`, `baseline`, `allow`, `exclude`, `sarif`, `sarif-file`, `upload-sarif`, `category` and `python-version`; job summary; SARIF upload with `github/codeql-action/upload-sarif` pinned by commit.
 - Planted and clean fixtures, a run-time secret fixture generator, a self-test workflow that runs the Action on them, CI on Python 3.11, 3.12 and 3.13, a container image `ghcr.io/basitalisandhu/skill-scan-gate` published on version tags with an SPDX SBOM, a build provenance attestation and a keyless cosign signature, and PyPI trusted publishing (off until the repository variable `PYPI_PUBLISH` is set).
 
-[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/basitalisandhu/skill-scan-gate/releases/tag/v0.1.0

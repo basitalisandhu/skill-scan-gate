@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "skill-scan-gate"
-version = "0.1.0"
+version = "0.2.0"
 description = "CI gate for Claude Code skills and plugins: scans for instruction-override text, exfiltration patterns, dangerous hook commands, unpinned MCP servers and secret-shaped strings, writes SARIF, and fails the build above a severity threshold."
 readme = "README.md"
 requires-python = ">=3.11"

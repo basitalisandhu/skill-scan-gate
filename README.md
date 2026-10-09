@@ -10,7 +10,7 @@
 GitHub Action:
 
 ```yaml
-- uses: basitalisandhu/skill-scan-gate@v0.1.0
+- uses: basitalisandhu/skill-scan-gate@v0.2.0
 ```
 
 pip (after the first PyPI release; until then `pipx install git+https://github.com/basitalisandhu/skill-scan-gate`):
@@ -22,7 +22,7 @@ pip install skill-scan-gate
 Container image (GitHub Packages):
 
 ```bash
-docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.1.0 scan .
+docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.2.0 scan .
 ```
 
 ## What it is, who it is for, and why
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@v0.1.0   # pin to a commit SHA in production
+      - uses: basitalisandhu/skill-scan-gate@v0.2.0   # pin to a commit SHA in production
         with:
           path: .
           fail-on: high
@@ -106,7 +106,7 @@ The repository ships a planted fixture with one example of each committable prob
 
 ```text
 $ skill-scan-gate scan tests/fixtures/fixture-planted
-skill-scan-gate 0.1.0: scanned 11 file(s) under tests/fixtures/fixture-planted
+skill-scan-gate 0.2.0: scanned 11 file(s) under tests/fixtures/fixture-planted
 
 SEVERITY  RULE    LOCATION                          TITLE
 --------------------------------------------------------------------------------------------
@@ -129,7 +129,7 @@ high      SSG201  skills/helper/SKILL.md:13         URL carries an environment v
 34 finding(s): 18 high, 13 medium, 3 low; gate fail (fail-on high).
 
 $ skill-scan-gate scan tests/fixtures/fixture-clean --fail-on low
-skill-scan-gate 0.1.0: scanned 10 file(s) under tests/fixtures/fixture-clean
+skill-scan-gate 0.2.0: scanned 10 file(s) under tests/fixtures/fixture-clean
 
 No findings.
 

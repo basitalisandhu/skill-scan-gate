@@ -15,7 +15,7 @@ skill-scan-gate scan . --baseline .skill-scan-gate-baseline.json
 In the Action:
 
 ```yaml
-- uses: basitalisandhu/skill-scan-gate@v0.1.0
+- uses: basitalisandhu/skill-scan-gate@v0.2.0
   with:
     baseline: .skill-scan-gate-baseline.json
 ```
