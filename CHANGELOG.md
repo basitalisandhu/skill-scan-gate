@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-13
+
+### Added
+
+- Action input `comment` (default `false`): on pull requests, post or update one sticky comment (found by a hidden `<!-- skill-scan-gate:comment CATEGORY -->` marker) with counts by severity, the gate result, the top 10 findings with rule id, `file:line` and remediation, and links to code scanning and the workflow run. Posted with `gh api` from the runner; never shows matched text; skipped with a notice on forks or when the token cannot write, and never fails the job.
+- Action input `github-token` (default `${{ github.token }}`) and output `comment-file` (the comment body, written before posting).
+- `scan --comment FILE`, `--comment-marker NAME`, `--comment-sarif-url URL` and `--comment-run-url URL` write the same comment body from the command line.
+- Ready-made workflow `examples/skill-scan-gate.yml` (pull requests touching skills, plugins, `.mcp.json`, hooks and agent instructions; least-privilege job permissions) and a Quick start at the top of the README.
+- `docs/action.md`: inputs, outputs, permissions, the comment and the fork caveat.
+- Self-test job that runs the Action with `comment: true` on the planted and secret-shaped fixtures and checks the comment body file.
+
+### Changed
+
+- Action description shortened to under 125 characters for the GitHub Marketplace listing.
+- Markdown table cells escape line breaks as well as pipes, backticks and angle brackets.
+
 ## [0.2.0] - 2026-10-09
 
 ### Added
@@ -26,6 +42,7 @@ All notable changes to this project are documented here. The format follows
 - Composite GitHub Action (`action.yml`) with inputs `path`, `fail-on`, `baseline`, `allow`, `exclude`, `sarif`, `sarif-file`, `upload-sarif`, `category` and `python-version`; job summary; SARIF upload with `github/codeql-action/upload-sarif` pinned by commit.
 - Planted and clean fixtures, a run-time secret fixture generator, a self-test workflow that runs the Action on them, CI on Python 3.11, 3.12 and 3.13, a container image `ghcr.io/basitalisandhu/skill-scan-gate` published on version tags with an SPDX SBOM, a build provenance attestation and a keyless cosign signature, and PyPI trusted publishing (off until the repository variable `PYPI_PUBLISH` is set).
 
-[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/basitalisandhu/skill-scan-gate/releases/tag/v0.1.0

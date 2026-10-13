@@ -1,5 +1,5 @@
 name: "Skill Scan Gate"
-description: "CI gate for Claude Code skills and plugins: scans for instruction-override text, exfiltration patterns, dangerous hooks, unpinned MCP servers and secrets, writes SARIF and fails above a threshold."
+description: "Gate Claude Code skills and plugins in CI: prompt injection, exfiltration, risky hooks, unpinned MCP, secrets."
 author: "Muhammad Basit Ali (@basitalisandhu)"
 branding:
   icon: shield
@@ -46,6 +46,14 @@ inputs:
     description: "Code scanning category for the upload, so several scans can coexist in one repository."
     required: false
     default: "skill-scan-gate"
+  comment:
+    description: "Post or update one sticky pull request comment with the counts, the gate result and the top 10 findings (true or false). Needs permissions pull-requests write; skipped with a notice on forks."
+    required: false
+    default: "false"
+  github-token:
+    description: "Token used to post the pull request comment. The default job token is enough when the job has pull-requests write."
+    required: false
+    default: ${{ github.token }}
   python-version:
     description: "Python version to install with actions/setup-python. Empty uses the python3 on the runner (3.11 or newer is required)."
     required: false
@@ -67,6 +75,9 @@ outputs:
   sarif-file:
     description: "Path of the SARIF report, empty when sarif is false."
     value: ${{ steps.scan.outputs.sarif-file }}
+  comment-file:
+    description: "Path of the pull request comment body (Markdown), empty when comment is false."
+    value: ${{ steps.scan.outputs.comment-file }}
 
 runs:
   using: "composite"
@@ -90,6 +101,10 @@ runs:
         EXCLUDE: ${{ inputs.exclude }}
         SARIF: ${{ inputs.sarif }}
         SARIF_FILE: ${{ inputs.sarif-file }}
+        UPLOAD_SARIF: ${{ inputs.upload-sarif }}
+        COMMENT: ${{ inputs.comment }}
+        CATEGORY: ${{ inputs.category }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
         set -uo pipefail
         if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
@@ -110,6 +125,17 @@ runs:
         else
           echo "sarif-file=" >> "$GITHUB_OUTPUT"
         fi
+        if [ "$COMMENT" = "true" ]; then
+          comment_file=$(mktemp "${RUNNER_TEMP:-/tmp}/skill-scan-gate-comment.XXXXXX")
+          args+=(--comment "$comment_file" --comment-marker "$CATEGORY")
+          args+=(--comment-run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")
+          if [ "$SARIF" = "true" ] && [ "$UPLOAD_SARIF" = "true" ] && [ -n "$PR_NUMBER" ]; then
+            args+=(--comment-sarif-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/security/code-scanning?query=is%3Aopen+pr%3A$PR_NUMBER+tool%3Askill-scan-gate")
+          fi
+          echo "comment-file=$comment_file" >> "$GITHUB_OUTPUT"
+        else
+          echo "comment-file=" >> "$GITHUB_OUTPUT"
+        fi
         set +e
         PYTHONPATH="$ACTION_PATH/src${PYTHONPATH:+:$PYTHONPATH}" python3 -m skill_scan_gate "${args[@]}"
         rc=$?
@@ -127,6 +153,42 @@ runs:
       with:
         sarif_file: ${{ inputs.sarif-file }}
         category: ${{ inputs.category }}
+
+    - name: Comment on the pull request
+      if: ${{ !cancelled() && steps.scan.outcome == 'success' && inputs.comment == 'true' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        BODY_FILE: ${{ steps.scan.outputs.comment-file }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+      run: |
+        # Never fails the job: a missing permission or a fork only skips the comment with a notice.
+        set -uo pipefail
+        skip() { echo "::notice title=skill-scan-gate::$1 The results are in the job summary."; exit 0; }
+        if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+          skip "Pull request from a fork: the token is read-only, so no comment was posted."
+        fi
+        command -v gh > /dev/null || skip "The gh CLI is not on this runner, so no comment was posted."
+        [ -s "$BODY_FILE" ] || skip "No comment body was written."
+        MARKER=$(head -n 1 "$BODY_FILE")
+        export MARKER
+        payload=$(mktemp "${RUNNER_TEMP:-/tmp}/skill-scan-gate-payload.XXXXXX")
+        python3 -c 'import json, sys; json.dump({"body": open(sys.argv[1], encoding="utf-8").read()}, open(sys.argv[2], "w"))' "$BODY_FILE" "$payload"
+        comments="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments"
+        if ! existing=$(gh api --paginate "$comments?per_page=100" --jq '.[] | select((.body // "") | startswith(env.MARKER)) | .id'); then
+          skip "Could not list the pull request comments (the job needs pull-requests write)."
+        fi
+        id=$(printf '%s\n' "$existing" | head -n 1)
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" --input "$payload" > /dev/null \
+            || skip "Could not update the pull request comment (the job needs pull-requests write)."
+          echo "Updated the skill-scan-gate comment on pull request #$PR_NUMBER."
+        else
+          gh api -X POST "$comments" --input "$payload" > /dev/null \
+            || skip "Could not post the pull request comment (the job needs pull-requests write)."
+          echo "Posted the skill-scan-gate comment on pull request #$PR_NUMBER."
+        fi
 
     - name: Fail on findings at or above the threshold
       if: ${{ steps.scan.outputs.gate == 'fail' }}

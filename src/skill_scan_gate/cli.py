@@ -14,7 +14,7 @@ from pathlib import Path
 
 from . import __version__
 from .patterns import BLOB_MIN
-from .report import gate, render_json, render_markdown, render_sarif, render_table, summary_line
+from .report import gate, render_comment, render_json, render_markdown, render_sarif, render_table, summary_line
 from .rules import RULES, SEVERITIES
 from .scanner import ScanResult, scan
 from .suppress import (
@@ -75,6 +75,20 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="FILE",
         help="also append finding-count, highest-severity, gate and suppressed-count as key=value lines",
     )
+    s.add_argument(
+        "--comment",
+        type=Path,
+        metavar="FILE",
+        help="also write a pull request comment body (Markdown, top 10 findings, no evidence) to FILE",
+    )
+    s.add_argument(
+        "--comment-marker",
+        default="skill-scan-gate",
+        metavar="NAME",
+        help="name in the hidden marker that identifies the sticky comment (default: skill-scan-gate)",
+    )
+    s.add_argument("--comment-sarif-url", default="", metavar="URL", help="code scanning link for the comment")
+    s.add_argument("--comment-run-url", default="", metavar="URL", help="workflow run link for the comment")
     s.add_argument(
         "--sarif-root",
         type=Path,
@@ -157,6 +171,18 @@ def _cmd_scan(a: argparse.Namespace) -> int:
     if a.summary:
         with a.summary.open("a", encoding="utf-8") as fh:
             fh.write(render_markdown(result, a.fail_on) + "\n")
+    if a.comment:
+        a.comment.write_text(
+            render_comment(
+                result,
+                a.fail_on,
+                marker=a.comment_marker,
+                sarif_url=a.comment_sarif_url,
+                run_url=a.comment_run_url,
+                scanned=a.path.as_posix(),
+            ),
+            encoding="utf-8",
+        )
     g = gate(result, a.fail_on)
     if a.github_output:
         with a.github_output.open("a", encoding="utf-8") as fh:

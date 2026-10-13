@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from . import __version__
-from .rules import HIGH, LOW, MEDIUM, RULES, at_or_above
+from .rules import HIGH, LOW, MEDIUM, RULES, SEVERITY_RANK, at_or_above
 from .scanner import Finding, ScanResult
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
@@ -95,7 +95,7 @@ def render_json(result: ScanResult, fail_on: str) -> str:
 
 
 def _md(text: str) -> str:
-    return text.replace("|", "\\|").replace("`", "'").replace("<", "&lt;")
+    return text.replace("|", "\\|").replace("`", "'").replace("<", "&lt;").replace("\r", " ").replace("\n", " ")
 
 
 def render_markdown(result: ScanResult, fail_on: str) -> str:
@@ -208,3 +208,76 @@ def by_rule(findings: list[Finding]) -> dict[str, int]:
     for f in findings:
         out[f.rule] = out.get(f.rule, 0) + 1
     return dict(sorted(out.items()))
+
+
+# ---------------------------------------------------------------- pull request comment
+
+COMMENT_MARKER_PREFIX = "<!-- skill-scan-gate:comment"
+COMMENT_TOP = 10
+
+
+def comment_marker(name: str = "skill-scan-gate") -> str:
+    """Hidden HTML marker that identifies the sticky comment; one per name (the Action passes its category)."""
+    safe = "".join(ch for ch in name if ch.isalnum() or ch in "-_.") or "skill-scan-gate"
+    return f"{COMMENT_MARKER_PREFIX} {safe} -->"
+
+
+def top_findings(findings: list[Finding], limit: int = COMMENT_TOP) -> list[Finding]:
+    """Highest severity first, then by file and line, so the comment shows what matters most."""
+    return sorted(findings, key=lambda f: (-SEVERITY_RANK[f.severity], f.file, f.line, f.rule))[:limit]
+
+
+def render_comment(
+    result: ScanResult,
+    fail_on: str,
+    *,
+    marker: str = "skill-scan-gate",
+    sarif_url: str = "",
+    run_url: str = "",
+    scanned: str = "",
+) -> str:
+    """Markdown body for the sticky pull request comment.
+
+    Evidence is deliberately left out: the comment shows rule, location, title and fix only, so no
+    matched text (redacted or not) reaches a pull request thread. Every value is escaped for tables.
+    """
+    g = gate(result, fail_on)
+    c = result.counts()
+    suppressed = len(result.suppressed_baseline) + len(result.suppressed_allow)
+    where = f" under `{_md(scanned)}`" if scanned else ""
+    head = "failed" if g == "fail" else "passed"
+    out = [
+        comment_marker(marker),
+        f"### skill-scan-gate: gate {head}",
+        "",
+        f"{len(result.findings)} finding(s) in {len(result.files)} scanned file(s){where}. Threshold: `{fail_on}`.",
+        "",
+        "| High | Medium | Low | Suppressed | Gate |",
+        "|---:|---:|---:|---:|:---:|",
+        f"| {c[HIGH]} | {c[MEDIUM]} | {c[LOW]} | {suppressed} | {g} |",
+        "",
+    ]
+    top = top_findings(result.findings)
+    if top:
+        label = f"Top {len(top)} of {len(result.findings)}" if len(result.findings) > len(top) else "Findings"
+        out += [f"**{label}** (highest severity first):", ""]
+        out += ["| Severity | Rule | Location | Finding | Fix |", "|---|---|---|---|---|"]
+        for f in top:
+            out.append(
+                f"| {f.severity} | [{f.rule}]({RULES[f.rule].anchor}) | `{_md(f.file)}:{f.line}` "
+                f"| {_md(f.title)} | {_md(f.remediation)} |"
+            )
+        out.append("")
+    links = []
+    if sarif_url:
+        links.append(f"[full SARIF results in code scanning]({sarif_url})")
+    if run_url:
+        links.append(f"[job summary]({run_url})")
+    if links:
+        out += ["See the " + " and the ".join(links) + ".", ""]
+    if result.errors:
+        out += [f"{len(result.errors)} file(s) could not be read; see the job log.", ""]
+    out.append(
+        f"<sub>skill-scan-gate {__version__}. Matched text is not shown here; this comment is updated in place.</sub>"
+    )
+    return "\n".join(out) + "\n"

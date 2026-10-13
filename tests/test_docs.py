@@ -55,3 +55,11 @@ def test_no_em_dashes_anywhere():
 
 def test_changelog_has_dated_release():
     assert "## [0.1.0] - 2026-10-04" in (ROOT / "CHANGELOG.md").read_text()
+
+
+def test_changelog_has_0_3_0_and_action_docs():
+    assert "## [0.3.0] - 2026-10-13" in (ROOT / "CHANGELOG.md").read_text()
+    action_md = (ROOT / "docs" / "action.md").read_text()
+    for word in ("comment", "github-token", "pull-requests: write", "fork", "comment-file"):
+        assert word in action_md, word
+    assert "examples/skill-scan-gate.yml" in README

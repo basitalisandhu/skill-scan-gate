@@ -111,3 +111,79 @@ def test_release_workflow_is_guarded():
     doc = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
     for job in doc["jobs"].values():
         assert job["if"] == "vars.PYPI_PUBLISH == 'true'"
+
+
+EXAMPLE = ROOT / "examples" / "skill-scan-gate.yml"
+
+
+def test_marketplace_metadata():
+    # GitHub Marketplace: a name, a description under 125 characters, an author and branding.
+    assert ACTION["name"] == "Skill Scan Gate"
+    assert len(ACTION["description"]) < 125
+    assert ACTION["author"]
+    assert ACTION["branding"]["icon"] == "shield"
+    assert ACTION["branding"]["color"] in (
+        "white",
+        "black",
+        "yellow",
+        "blue",
+        "green",
+        "orange",
+        "red",
+        "purple",
+        "gray-dark",
+    )
+
+
+def test_comment_inputs_and_step():
+    inputs = ACTION["inputs"]
+    assert inputs["comment"]["default"] == "false"
+    assert inputs["github-token"]["default"] == "${{ github.token }}"
+    assert ACTION["outputs"]["comment-file"]["value"] == "${{ steps.scan.outputs.comment-file }}"
+    steps = ACTION["runs"]["steps"]
+    names = [s["name"] for s in steps]
+    comment = steps[names.index("Comment on the pull request")]
+    assert names.index("Comment on the pull request") < len(steps) - 1  # the gate still fails last
+    assert "inputs.comment == 'true'" in comment["if"] and "pull_request" in comment["if"]
+    assert comment["env"]["GH_TOKEN"] == "${{ inputs.github-token }}"
+    assert "uses" not in comment  # gh api from the runner, no third-party action
+    run = comment["run"]
+    assert "gh api" in run and "startswith(env.MARKER)" in run
+    assert "exit 1" not in run and "skip()" in run and "exit 0" in run
+    assert '"$HEAD_REPO" != "$GITHUB_REPOSITORY"' in run
+
+
+def test_example_workflow_is_least_privilege_and_pinned():
+    from skill_scan_gate import __version__
+
+    text = EXAMPLE.read_text()
+    doc = yaml.safe_load(text)
+    on = doc[True] if True in doc else doc["on"]  # PyYAML reads the key `on` as True
+    paths = on["pull_request"]["paths"]
+    for needle in ("SKILL.md", "plugins", ".mcp.json", "hooks"):
+        assert any(needle in p for p in paths), needle
+    assert doc["permissions"] == {"contents": "read"}
+    job = doc["jobs"]["scan"]
+    assert job["permissions"] == {"contents": "read", "pull-requests": "write", "security-events": "write"}
+    refs = list(_uses(doc))
+    assert SHA_PIN.match(refs[0].split()[0]) and refs[0].startswith("actions/checkout@")
+    ssg = next(s for s in job["steps"] if "skill-scan-gate" in s.get("uses", ""))
+    assert ssg["with"]["comment"] == "true"
+    # Pinned to this release: the commit SHA with a version comment, or the tag itself.
+    m = re.search(r"uses: basitalisandhu/skill-scan-gate@(\S+)(?: # (v\S+))?", text)
+    assert m, "example does not use the Action"
+    ref, comment = m.groups()
+    if re.fullmatch(r"[0-9a-f]{40}", ref):
+        assert comment == f"v{__version__}", comment
+    else:
+        assert ref == f"v{__version__}", ref
+
+
+def test_quoted_step_names_with_colon_space():
+    for path in [*WORKFLOWS, EXAMPLE, ROOT / "action.yml"]:
+        for line in path.read_text().splitlines():
+            s = line.strip()
+            if s.startswith(("- name: ", "name: ")):
+                value = s.split("name: ", 1)[1]
+                if ": " in value:
+                    assert value[0] in "\"'", f"{path.name}: {s}"

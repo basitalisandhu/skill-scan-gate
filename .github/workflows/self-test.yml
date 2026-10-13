@@ -5,6 +5,9 @@ name: Action self-test
 #   - fixture-clean must pass with zero findings at the lowest threshold;
 #   - a secret-shaped fixture, generated at run time and never committed, must fail;
 #   - the planted fixture with a baseline of its own findings must pass.
+#   - on pull requests, the planted fixture with comment: true must write a comment body with the counts,
+#     the gate result, at most 10 findings, the hidden marker and no secret values; the body is asserted
+#     from the file the Action writes, so the test does not depend on the comment being posted.
 # SARIF upload is off here so planted findings never reach this repository's Security tab.
 
 on:
@@ -120,3 +123,95 @@ jobs:
           PYTHONPATH=src python3 -m skill_scan_gate scan tests/fixtures/fixture-planted > /dev/null; test $? -eq 1 || exit 1
           PYTHONPATH=src python3 -m skill_scan_gate scan tests/fixtures/fixture-clean --fail-on low > /dev/null; test $? -eq 0 || exit 1
           PYTHONPATH=src python3 -m skill_scan_gate scan does-not-exist > /dev/null 2>&1; test $? -eq 2 || exit 1
+
+  pr-comment:
+    name: Pull request comment mode
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the secret-shaped fixture (generated, never committed)
+        run: python3 tests/make_secret_fixture.py "$RUNNER_TEMP/fixture-secrets"
+
+      - name: "Planted fixture with comment: true"
+        id: planted
+        uses: ./
+        continue-on-error: true
+        with:
+          path: tests/fixtures/fixture-planted
+          fail-on: high
+          upload-sarif: "false"
+          sarif-file: planted.sarif
+          category: skill-scan-gate-self-test
+          comment: "true"
+
+      - name: "Secret-shaped fixture with comment: true (body only)"
+        id: secrets
+        uses: ./
+        continue-on-error: true
+        with:
+          path: ${{ runner.temp }}/fixture-secrets
+          fail-on: high
+          blob-min: "120"
+          sarif: "false"
+          category: skill-scan-gate-self-test-secrets
+          comment: "true"
+          github-token: ""
+
+      - name: Check the comment bodies
+        env:
+          PLANTED_OUTCOME: ${{ steps.planted.outcome }}
+          PLANTED_BODY: ${{ steps.planted.outputs.comment-file }}
+          PLANTED_COUNT: ${{ steps.planted.outputs.finding-count }}
+          SECRETS_OUTCOME: ${{ steps.secrets.outcome }}
+          SECRETS_BODY: ${{ steps.secrets.outputs.comment-file }}
+        run: |
+          set -eu
+          test "$PLANTED_OUTCOME" = "failure"
+          test "$SECRETS_OUTCOME" = "failure"
+          test -s "$PLANTED_BODY"
+          test -s "$SECRETS_BODY"
+          python3 - <<'PY'
+          import os, re, sys
+          sys.path.insert(0, "tests")
+          from make_secret_fixture import tokens
+          body = open(os.environ["PLANTED_BODY"], encoding="utf-8").read()
+          lines = body.splitlines()
+          assert lines[0] == "<!-- skill-scan-gate:comment skill-scan-gate-self-test -->", lines[0]
+          assert "### skill-scan-gate: gate failed" in body
+          count = int(os.environ["PLANTED_COUNT"])
+          assert f"{count} finding(s)" in body, "count missing"
+          assert re.search(r"^\| \d+ \| \d+ \| \d+ \| 0 \| fail \|$", body, re.M), "summary row missing"
+          rows = [l for l in lines if re.match(r"^\| (high|medium|low) \| \[SSG\d{3}\]", l)]
+          assert len(rows) == min(10, count), len(rows)
+          assert rows[0].startswith("| high |"), rows[0]
+          assert all(re.search(r"`[^`]+:\d+`", r) for r in rows), "location missing"
+          assert "/actions/runs/" in body, "run link missing"
+          assert "code-scanning" not in body, "SARIF link without an upload"
+          secrets = open(os.environ["SECRETS_BODY"], encoding="utf-8").read()
+          leaked = [k for k, v in tokens().items() if v in secrets]
+          assert not leaked, f"secret values in the comment: {leaked}"
+          assert "not-a-key" not in secrets and "redacted" not in secrets, "evidence in the comment"
+          print("comment checks passed")
+          PY
+
+      - name: Check the sticky comment (same-repository pull requests only)
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          n=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" \
+            --jq '[.[] | select((.body // "") | startswith("<!-- skill-scan-gate:comment skill-scan-gate-self-test -->"))] | length' \
+            | awk '{s += $1} END {print s + 0}')
+          echo "sticky comments: $n"
+          if [ "$n" -ne 1 ]; then
+            echo "::warning::expected exactly one sticky comment, found $n (posting may have been refused)"
+          fi

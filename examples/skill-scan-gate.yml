@@ -1,0 +1,63 @@
+# skill-scan-gate: copy this file to .github/workflows/skill-scan-gate.yml in your repository.
+#
+# On every pull request that touches skills, plugins, MCP configuration, hooks or agent instructions it
+# scans the repository, posts (and then updates) one comment on the pull request with the counts and the
+# top 10 findings, uploads SARIF to code scanning, and fails the check on high-severity findings.
+#
+# Permissions are the least the job needs:
+#   contents: read          check out the repository
+#   pull-requests: write    the sticky comment (drop it and set comment: "false" to skip comments)
+#   security-events: write  the SARIF upload (drop it and set upload-sarif: "false" to skip code scanning;
+#                           private repositories need GitHub Code Security for code scanning)
+# Pull requests from forks get a read-only token: the comment is skipped with a notice, the SARIF
+# upload is turned off below, and the gate still passes or fails the check.
+#
+# Using path filters with a required status check: a check that never ran blocks the merge, so either
+# drop the paths list or do not mark this check as required.
+
+name: Skill scan gate
+
+on:
+  pull_request:
+    paths:
+      - "**/SKILL.md"
+      - "**/skills/**"
+      - "**/plugins/**"
+      - "**/.claude-plugin/**"
+      - "**/.claude/**"
+      - "**/.mcp.json"
+      - "**/hooks/**"
+      - "**/commands/**"
+      - "**/agents/**"
+      - "**/CLAUDE.md"
+      - "**/AGENTS.md"
+      - "**/.cursor/rules/**"
+      - ".github/workflows/skill-scan-gate.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-scan-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Scan skills and plugins
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Skill scan gate
+        uses: basitalisandhu/skill-scan-gate@v0.3.0
+        with:
+          path: .
+          fail-on: high
+          comment: "true"
+          upload-sarif: ${{ github.event.pull_request.head.repo.full_name == github.repository }}

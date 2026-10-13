@@ -7,11 +7,40 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-GitHub Action:
+## Quick start
+
+Copy [examples/skill-scan-gate.yml](examples/skill-scan-gate.yml) to `.github/workflows/skill-scan-gate.yml`. That is the whole setup:
 
 ```yaml
-- uses: basitalisandhu/skill-scan-gate@v0.2.0
+name: Skill scan gate
+
+on:
+  pull_request:
+    paths: ["**/SKILL.md", "**/skills/**", "**/plugins/**", "**/.claude-plugin/**", "**/.mcp.json", "**/hooks/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write     # the pull request comment
+      security-events: write   # the SARIF upload to code scanning
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: basitalisandhu/skill-scan-gate@v0.3.0   # pin to the commit SHA, see docs/action.md
+        with:
+          comment: "true"
+          upload-sarif: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
 ```
+
+On every pull request that touches skills, plugins, MCP configuration or hooks, the check fails on high-severity findings and one comment appears on the pull request, updated in place on each push. The comment shows whether the gate passed, a table of high, medium and low counts, and the top 10 findings with rule id, `file:line` and the fix, plus links to the code scanning results and the job summary. It never shows the matched text, so secrets stay out of the thread. On pull requests from forks the comment is skipped with a notice and the gate still runs. Inputs, outputs, permissions and the fork details: [docs/action.md](docs/action.md).
+
+### Other ways to run it
 
 pip (after the first PyPI release; until then `pipx install git+https://github.com/basitalisandhu/skill-scan-gate`):
 
@@ -22,7 +51,7 @@ pip install skill-scan-gate
 Container image (GitHub Packages):
 
 ```bash
-docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.2.0 scan .
+docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.3.0 scan .
 ```
 
 ## What it is, who it is for, and why
@@ -38,7 +67,7 @@ skill-scan-gate is for maintainers of skills repositories, plugin authors and ma
 
 Standard library only, Python 3.11 or newer, no network access. It reads files and never executes them.
 
-## Quickstart
+## Usage
 
 ### In GitHub Actions
 
@@ -63,7 +92,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@v0.2.0   # pin to a commit SHA in production
+      - uses: basitalisandhu/skill-scan-gate@v0.3.0   # pin to a commit SHA in production
         with:
           path: .
           fail-on: high
@@ -82,10 +111,12 @@ The Action runs the scanner from its own checkout, so the code that runs is the 
 | `sarif` | `true` | Write a SARIF report. |
 | `sarif-file` | `skill-scan-gate.sarif` | Where to write it. |
 | `upload-sarif` | `true` | Upload it to code scanning (needs `security-events: write`). |
-| `category` | `skill-scan-gate` | Code scanning category. |
+| `category` | `skill-scan-gate` | Code scanning category; also names the sticky comment. |
+| `comment` | `false` | Post or update one pull request comment with counts, gate and top 10 findings (needs `pull-requests: write`). |
+| `github-token` | `${{ github.token }}` | Token for the comment. |
 | `python-version` | empty | Install this Python with actions/setup-python; empty uses the runner's `python3`. |
 
-Outputs: `finding-count`, `highest-severity`, `gate` (`pass` or `fail`), `suppressed-count`, `sarif-file`.
+Outputs: `finding-count`, `highest-severity`, `gate` (`pass` or `fail`), `suppressed-count`, `sarif-file`, `comment-file`. Full reference: [docs/action.md](docs/action.md).
 
 ### On the command line
 
@@ -106,7 +137,7 @@ The repository ships a planted fixture with one example of each committable prob
 
 ```text
 $ skill-scan-gate scan tests/fixtures/fixture-planted
-skill-scan-gate 0.2.0: scanned 11 file(s) under tests/fixtures/fixture-planted
+skill-scan-gate 0.3.0: scanned 12 file(s) under tests/fixtures/fixture-planted
 
 SEVERITY  RULE    LOCATION                          TITLE
 --------------------------------------------------------------------------------------------
@@ -126,10 +157,10 @@ high      SSG103  skills/helper/SKILL.md:10         Text tells the model to trea
 high      SSG201  skills/helper/SKILL.md:13         URL carries an environment variable, command output or secret template
 ...
 
-34 finding(s): 18 high, 13 medium, 3 low; gate fail (fail-on high).
+35 finding(s): 18 high, 13 medium, 4 low; gate fail (fail-on high).
 
 $ skill-scan-gate scan tests/fixtures/fixture-clean --fail-on low
-skill-scan-gate 0.2.0: scanned 10 file(s) under tests/fixtures/fixture-clean
+skill-scan-gate 0.3.0: scanned 10 file(s) under tests/fixtures/fixture-clean
 
 No findings.
 
