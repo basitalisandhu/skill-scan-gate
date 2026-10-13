@@ -55,7 +55,7 @@ jobs:
           persist-credentials: false
 
       - name: Skill scan gate
-        uses: basitalisandhu/skill-scan-gate@v0.3.0
+        uses: basitalisandhu/skill-scan-gate@2c9d25e6c74a83a9e10012ff53c247220037f533 # v0.3.0
         with:
           path: .
           fail-on: high
