@@ -262,6 +262,15 @@ The scanner makes no network calls. The Action uploads SARIF to your own reposit
 
 Issues and pull requests are welcome, in particular false positives and misses with the smallest file that shows them. Run `make check` (ruff and pytest) before opening a pull request and read [CONTRIBUTING.md](CONTRIBUTING.md). [docs/good-first-issues.md](docs/good-first-issues.md) lists six scoped starting points. Security problems: see [SECURITY.md](SECURITY.md).
 
+The plan is in [ROADMAP.md](ROADMAP.md); questions and ideas go in [Discussions](https://github.com/basitalisandhu/skill-scan-gate/discussions).
+
+## Contributors
+
+Thank you to everyone who has had a pull request merged here:
+
+- [@VimalN2005](https://github.com/VimalN2005) made the blob threshold configurable with `--blob-min` ([#14](https://github.com/basitalisandhu/skill-scan-gate/pull/14)) and added tests for markdown link targets in SSG201 and SSG204 ([#10](https://github.com/basitalisandhu/skill-scan-gate/pull/10)).
+- [@nawaaaaaAaar](https://github.com/nawaaaaaAaar) added the warning for unrestricted skill shell access ([#15](https://github.com/basitalisandhu/skill-scan-gate/pull/15)).
+
 ## Related projects
 
 - [cc-plugin-lock](https://github.com/basitalisandhu/cc-plugin-lock): lock file for Claude Code plugins; the local verify-before-load counterpart to this gate.
