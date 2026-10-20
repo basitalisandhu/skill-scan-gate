@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@2c9d25e6c74a83a9e10012ff53c247220037f533 # v0.3.0
+      - uses: basitalisandhu/skill-scan-gate@v0.4.0
         with:
           comment: "true"
           upload-sarif: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
