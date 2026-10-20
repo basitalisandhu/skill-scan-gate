@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-20
+
 ### Added
 
 - `scan --changed-only BASE_REF`: report only findings in files changed since `BASE_REF` (`git diff --name-only --relative BASE_REF...HEAD` in the scanned directory); the repository checks (SSG7xx) still run, and a note gives the number of findings left out. A missing `git`, a directory outside a repository or an unknown ref is exit code 2 (#2).
@@ -16,6 +18,11 @@ All notable changes to this project are documented here. The format follows
 ### Fixed
 
 - `.claude/settings.local.json` is now scanned like `settings.json`. Claude Code reads it as project-local settings, so a committed copy that turned off permission prompts or ran a hook command used to pass without a finding.
+
+### Changed
+
+- README: the first screen has a three-line command-line quick start with real output, ahead of the Actions quick start.
+- Workflows and repository policy hardened for the OpenSSF Scorecard (#26), the roadmap and Discussions links (#22, #25), and a dependency update for the SARIF upload action (#27).
 
 ## [0.3.0] - 2026-10-13
 
@@ -53,7 +60,8 @@ All notable changes to this project are documented here. The format follows
 - Composite GitHub Action (`action.yml`) with inputs `path`, `fail-on`, `baseline`, `allow`, `exclude`, `sarif`, `sarif-file`, `upload-sarif`, `category` and `python-version`; job summary; SARIF upload with `github/codeql-action/upload-sarif` pinned by commit.
 - Planted and clean fixtures, a run-time secret fixture generator, a self-test workflow that runs the Action on them, CI on Python 3.11, 3.12 and 3.13, a container image `ghcr.io/basitalisandhu/skill-scan-gate` published on version tags with an SPDX SBOM, a build provenance attestation and a keyless cosign signature, and PyPI trusted publishing (off until the repository variable `PYPI_PUBLISH` is set).
 
-[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/basitalisandhu/skill-scan-gate/releases/tag/v0.1.0
