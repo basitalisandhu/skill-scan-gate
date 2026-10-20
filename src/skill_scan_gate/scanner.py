@@ -77,6 +77,7 @@ class ScanResult:
     suppressed_allow: list[Finding] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     blob_min: int = P.BLOB_MIN
+    notes: list[str] = field(default_factory=list)
 
     def counts(self) -> dict[str, int]:
         return {s: sum(1 for f in self.findings if f.severity == s) for s in (HIGH, MEDIUM, LOW)}

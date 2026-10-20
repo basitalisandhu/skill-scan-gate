@@ -53,6 +53,8 @@ def render_table(result: ScanResult, fail_on: str) -> str:
     else:
         out.append("No findings.")
         out.append("")
+    for n in result.notes:
+        out.append(f"note: {n}")
     for w in result.warnings:
         out.append(f"warning: {w}")
     for e in result.errors:
@@ -82,6 +84,7 @@ def to_json(result: ScanResult, fail_on: str) -> dict[str, Any]:
             "suppressedByAllowlist": len(result.suppressed_allow),
         },
         "findings": [f.to_dict() for f in result.findings],
+        "notes": result.notes,
         "warnings": result.warnings,
         "errors": result.errors,
     }
@@ -122,6 +125,8 @@ def render_markdown(result: ScanResult, fail_on: str) -> str:
             out.append("")
             out.append(f"{len(result.findings) - MARKDOWN_ROW_LIMIT} more finding(s) in the SARIF and JSON output.")
         out.append("")
+    for n in result.notes:
+        out.append(f"- note: {_md(n)}")
     for w in result.warnings:
         out.append(f"- warning: {_md(w)}")
     for e in result.errors:

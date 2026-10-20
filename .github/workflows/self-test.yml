@@ -5,6 +5,7 @@ name: Action self-test
 #   - fixture-clean must pass with zero findings at the lowest threshold;
 #   - a secret-shaped fixture, generated at run time and never committed, must fail;
 #   - the planted fixture with a baseline of its own findings must pass.
+#   - on pull requests, changed-only mode reports a subset of the planted findings and rejects an unknown ref;
 #   - on pull requests, the planted fixture with comment: true must write a comment body with the counts,
 #     the gate result, at most 10 findings, the hidden marker and no secret values; the body is asserted
 #     from the file the Action writes, so the test does not depend on the comment being posted.
@@ -215,3 +216,45 @@ jobs:
           if [ "$n" -ne 1 ]; then
             echo "::warning::expected exactly one sticky comment, found $n (posting may have been refused)"
           fi
+
+  changed-only:
+    name: Changed-only mode
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Planted fixture, every file
+        id: all
+        uses: ./
+        with:
+          path: tests/fixtures/fixture-planted
+          fail-on: none
+          upload-sarif: "false"
+          sarif-file: all.sarif
+
+      - name: Planted fixture, only the files this pull request changes
+        id: changed
+        uses: ./
+        with:
+          path: tests/fixtures/fixture-planted
+          fail-on: none
+          changed-only: "true"
+          upload-sarif: "false"
+          sarif-file: changed.sarif
+
+      - name: Check that changed-only reports a subset
+        env:
+          ALL_COUNT: ${{ steps.all.outputs.finding-count }}
+          CHANGED_COUNT: ${{ steps.changed.outputs.finding-count }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -eu
+          echo "every file: $ALL_COUNT, changed only: $CHANGED_COUNT"
+          test "$CHANGED_COUNT" -le "$ALL_COUNT"
+          PYTHONPATH=src python3 -m skill_scan_gate scan tests/fixtures/fixture-planted --changed-only "$BASE_SHA" --fail-on none | grep -q "note: changed-only:"
+          set +e
+          PYTHONPATH=src python3 -m skill_scan_gate scan tests/fixtures/fixture-planted --changed-only no-such-ref > /dev/null 2>&1; test $? -eq 2 || exit 1

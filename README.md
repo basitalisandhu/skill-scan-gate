@@ -106,6 +106,7 @@ The Action runs the scanner from its own checkout, so the code that runs is the 
 | `fail-on` | `high` | Lowest severity that fails the job: `low`, `medium`, `high` or `none`. |
 | `baseline` | empty | Baseline file; only findings not in it count. |
 | `blob-min` | `200` | Minimum base64 run length for SSG203; lower it to catch shorter encoded blobs (minimum 64). Same as `scan --blob-min`. |
+| `changed-only` | `false` | On pull requests, report only findings in the changed files (`scan --changed-only` with the base commit); repository checks still run. Check out with `fetch-depth: 0`. |
 | `allow` | empty | Allowlist file of documented exceptions. |
 | `exclude` | empty | Path globs to skip, one per line. |
 | `sarif` | `true` | Write a SARIF report. |
@@ -223,6 +224,7 @@ Severity maps to SARIF levels (high = error, medium = warning, low = note) and t
 
 - `skill-scan-gate baseline . --out FILE` snapshots today's findings; `scan --baseline FILE` then fails only on new ones. Fingerprints hash the rule, the file and the line text, not the line number, so unrelated edits do not resurface old findings.
 - `--allow FILE` takes documented exceptions, one per line: `SSG204 skills/notify/SKILL.md  # our own webhook`. Entries that match nothing are reported.
+- `--changed-only BASE_REF` reports only findings in files changed since `BASE_REF` (`git diff BASE_REF...HEAD`), plus the repository checks (SSG7xx). A missing `git`, a directory outside a repository or an unknown ref is exit code 2.
 - `--blob-min N` (default 200, minimum 64) sets the base64 threshold for SSG203 (hex stays 56 longer), for repositories shipping legitimate inline data.
 - There are no inline ignore comments, on purpose: an exception should be a visible change to a file you can protect with CODEOWNERS, not a comment inside the content being checked.
 

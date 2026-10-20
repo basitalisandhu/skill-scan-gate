@@ -16,6 +16,7 @@ The ready-made workflow is [examples/skill-scan-gate.yml](../examples/skill-scan
 | `fail-on` | `high` | Lowest severity that fails the job: `low`, `medium`, `high` or `none`. |
 | `baseline` | empty | Baseline file from `skill-scan-gate baseline`; only findings not in it count. |
 | `blob-min` | `200` | Minimum base64 run length for SSG203 (minimum 64). |
+| `changed-only` | `false` | On pull requests, report only findings in the files the pull request changes; repository checks (SSG7xx) still run. Needs the base commit in the clone (see below). |
 | `allow` | empty | Allowlist file of documented exceptions ([false-positives.md](false-positives.md)). |
 | `exclude` | empty | Path globs to skip, one per line. |
 | `sarif` | `true` | Write a SARIF 2.1.0 report. |
@@ -53,6 +54,24 @@ The matched text (evidence) is never put in the comment, so no secret value reac
 thread, redacted or not. The comment starts with a hidden marker,
 `<!-- skill-scan-gate:comment CATEGORY -->`; later runs find that comment and edit it instead of adding
 a new one.
+
+## Only the files a pull request changes
+
+On a large skills repository, `changed-only: "true"` keeps the report to the files the pull request touches. The Action passes `github.event.pull_request.base.sha` to `scan --changed-only`, which runs `git diff --name-only BASE...HEAD` in the scanned directory. The scanner still reads every file; findings in other files are left out of the report, the gate, the SARIF and the comment, and a note says how many. The SECURITY.md and LICENSE checks still run.
+
+`git diff` needs the base commit, so check out the full history:
+
+```yaml
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: basitalisandhu/skill-scan-gate@<commit SHA>
+        with:
+          changed-only: "true"
+```
+
+With the default shallow checkout the scan stops with exit code 2 and a message naming `fetch-depth: 0`. On events other than pull requests the input is ignored with a notice and every file is reported.
 
 ## Permissions
 

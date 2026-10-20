@@ -22,6 +22,10 @@ inputs:
     description: "Minimum base64 run length for SSG203 (long encoded blob). The CLI default is 200 and the minimum is 64."
     required: false
     default: "200"
+  changed-only:
+    description: "On pull requests, report only findings in the files the pull request changes (true or false). Repository checks still run. Needs actions/checkout with fetch-depth 0."
+    required: false
+    default: "false"
   allow:
     description: "Allowlist file (see docs/false-positives.md). Protect it with CODEOWNERS."
     required: false
@@ -98,6 +102,8 @@ runs:
         BASELINE: ${{ inputs.baseline }}
         BLOB_MIN: ${{ inputs.blob-min }}
         ALLOW: ${{ inputs.allow }}
+        CHANGED_ONLY: ${{ inputs.changed-only }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
         EXCLUDE: ${{ inputs.exclude }}
         SARIF: ${{ inputs.sarif }}
         SARIF_FILE: ${{ inputs.sarif-file }}
@@ -116,6 +122,13 @@ runs:
         if [ -n "$BASELINE" ]; then args+=(--baseline "$BASELINE"); fi
         if [ -n "$BLOB_MIN" ]; then args+=(--blob-min "$BLOB_MIN"); fi
         if [ -n "$ALLOW" ]; then args+=(--allow "$ALLOW"); fi
+        if [ "$CHANGED_ONLY" = "true" ]; then
+          if [ -n "$BASE_SHA" ]; then
+            args+=(--changed-only "$BASE_SHA")
+          else
+            echo "::notice title=skill-scan-gate::changed-only applies to pull requests; this run reports every file."
+          fi
+        fi
         while IFS= read -r glob; do
           if [ -n "$glob" ]; then args+=(--exclude "$glob"); fi
         done <<< "$EXCLUDE"
@@ -142,7 +155,7 @@ runs:
         set -e
         # 1 means the gate failed; the last step reports that after the SARIF upload. Anything else is an error.
         if [ "$rc" -gt 1 ]; then
-          echo "::error::skill-scan-gate exited with $rc (bad path, baseline or allowlist)"
+          echo "::error::skill-scan-gate exited with $rc (bad path, baseline, allowlist or changed-only base)"
           exit "$rc"
         fi
         exit 0

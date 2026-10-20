@@ -6,13 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `scan --changed-only BASE_REF`: report only findings in files changed since `BASE_REF` (`git diff --name-only --relative BASE_REF...HEAD` in the scanned directory); the repository checks (SSG7xx) still run, and a note gives the number of findings left out. A missing `git`, a directory outside a repository or an unknown ref is exit code 2 (#2).
+- Action input `changed-only` (default `false`): on pull requests, passes the base commit to `--changed-only`. Needs `actions/checkout` with `fetch-depth: 0`; see docs/action.md.
+- JSON output has a `notes` list; the table and Markdown outputs print notes.
+- `scan` warns when it found no skill, instruction, plugin, MCP, hook, settings or script files under the path, so a wrong path no longer looks like a clean result.
+
 ### Fixed
 
 - `.claude/settings.local.json` is now scanned like `settings.json`. Claude Code reads it as project-local settings, so a committed copy that turned off permission prompts or ran a hook command used to pass without a finding.
-
-### Added
-
-- `scan` warns when it found no skill, instruction, plugin, MCP, hook, settings or script files under the path, so a wrong path no longer looks like a clean result.
 
 ## [0.3.0] - 2026-10-13
 

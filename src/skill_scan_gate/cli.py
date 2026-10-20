@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .changed import ChangedFilesError, changed_files, keep_changed
 from .patterns import BLOB_MIN
 from .report import gate, render_comment, render_json, render_markdown, render_sarif, render_table, summary_line
 from .rules import RULES, SEVERITIES
@@ -65,6 +66,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="minimum base64 blob length for SSG203 (default: 200, minimum: 64)",
     )
     s.add_argument("--allow", type=Path, help="allowlist file (see docs/false-positives.md)")
+    s.add_argument(
+        "--changed-only",
+        metavar="BASE_REF",
+        help="report only findings in files changed since BASE_REF (git diff BASE_REF...HEAD); "
+        "repository checks (SSG7xx) still run",
+    )
     s.add_argument("--exclude", action="append", default=[], metavar="GLOB", help="path glob to skip (repeatable)")
     s.add_argument("--output", "-o", type=Path, help="write the report here instead of stdout")
     s.add_argument("--sarif", type=Path, metavar="FILE", help="also write SARIF 2.1.0 to FILE")
@@ -120,7 +127,9 @@ def run_scan(
     baseline: Path | None,
     allow: Path | None,
     blob_min: int = BLOB_MIN,
+    changed_only: str | None = None,
 ) -> ScanResult:
+    changed = changed_files(path, changed_only) if changed_only else None
     result = scan(path, exclude, blob_min=blob_min)
     if not result.files and not result.errors:
         result.warnings.append(
@@ -134,6 +143,12 @@ def run_scan(
             result.warnings.append(f"{allow}:{e.source_line}: allowlist entry '{e.describe()}' matched nothing")
     if baseline is not None:
         result.findings, result.suppressed_baseline = apply_baseline(result.findings, load_baseline(baseline))
+    if changed is not None:
+        result.findings, hidden = keep_changed(result.findings, changed)
+        result.notes.append(
+            f"changed-only: {len(changed)} file(s) changed since {changed_only}; "
+            f"{hidden} finding(s) in other files not reported"
+        )
     return result
 
 
@@ -154,8 +169,8 @@ def _cmd_scan(a: argparse.Namespace) -> int:
         print(f"skill-scan-gate: not a directory: {a.path}", file=sys.stderr)
         return EXIT_ERROR
     try:
-        result = run_scan(a.path, a.exclude, a.baseline, a.allow, blob_min=a.blob_min)
-    except SuppressionError as e:
+        result = run_scan(a.path, a.exclude, a.baseline, a.allow, blob_min=a.blob_min, changed_only=a.changed_only)
+    except (SuppressionError, ChangedFilesError) as e:
         print(f"skill-scan-gate: {e}", file=sys.stderr)
         return EXIT_ERROR
     prefix = _uri_prefix(a.path, a.sarif_root)
