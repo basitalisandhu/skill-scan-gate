@@ -6,7 +6,7 @@ The rules are text heuristics: nothing is executed and nothing is fetched. They 
 
 Severity maps to SARIF as high = error, medium = warning, low = note, with a security-severity of 8.0, 5.0 and 2.0 so GitHub code scanning shows them as high, medium and low.
 
-Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`, `.cursorrules`, `.cursor/rules/*`, `commands/*.md`, `agents/*.md`, `hooks/hooks.json`, `.claude-plugin/*.json`, `.mcp.json`, `settings.json`, and scripts under any `scripts/` or `hooks/` directory, at any depth. `.git`, `node_modules`, virtual environments, `dist` and `build` are skipped, and symbolic links are not followed.
+Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`, `.cursorrules`, `.cursor/rules/*`, `commands/*.md`, `agents/*.md`, `hooks/hooks.json`, `.claude-plugin/*.json`, `.mcp.json`, `settings.json`, `.claude/settings.local.json`, and scripts under any `scripts/` or `hooks/` directory, at any depth. `.git`, `node_modules`, virtual environments, `dist` and `build` are skipped, and symbolic links are not followed.
 
 ## Summary
 

@@ -122,6 +122,11 @@ def run_scan(
     blob_min: int = BLOB_MIN,
 ) -> ScanResult:
     result = scan(path, exclude, blob_min=blob_min)
+    if not result.files and not result.errors:
+        result.warnings.append(
+            f"no skill, instruction, plugin, MCP, hook, settings or script files found under {path}; "
+            "only the repository checks ran (is this the right directory?)"
+        )
     if allow is not None:
         entries = load_allowlist(allow)
         result.findings, result.suppressed_allow = apply_allowlist(result.findings, entries)

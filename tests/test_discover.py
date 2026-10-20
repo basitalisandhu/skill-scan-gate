@@ -22,6 +22,8 @@ from skill_scan_gate.discover import classify, excluded, walk
         (".claude-plugin/marketplace.json", "manifest"),
         (".mcp.json", "mcp"),
         (".claude/settings.json", "settings"),
+        (".claude/settings.local.json", "settings"),
+        ("config/settings.local.json", None),
         ("scripts/run.sh", "script"),
         ("hooks/guard.py", "script"),
         ("README.md", None),

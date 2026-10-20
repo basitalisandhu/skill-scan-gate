@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `.claude/settings.local.json` is now scanned like `settings.json`. Claude Code reads it as project-local settings, so a committed copy that turned off permission prompts or ran a hook command used to pass without a finding.
+
+### Added
+
+- `scan` warns when it found no skill, instruction, plugin, MCP, hook, settings or script files under the path, so a wrong path no longer looks like a clean result.
+
 ## [0.3.0] - 2026-10-13
 
 ### Added

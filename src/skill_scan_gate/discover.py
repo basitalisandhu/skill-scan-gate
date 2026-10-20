@@ -75,7 +75,8 @@ def classify(rel: PurePosixPath) -> str | None:
         return MANIFEST
     if name == ".mcp.json":
         return MCP
-    if name == "settings.json":
+    if name == "settings.json" or (name == "settings.local.json" and parents and parents[-1] == ".claude"):
+        # .claude/settings.local.json is the project-local settings file; Claude Code reads it like settings.json.
         return SETTINGS
     if ("scripts" in parents or "hooks" in parents) and suffix in SCRIPT_SUFFIXES:
         return SCRIPT
