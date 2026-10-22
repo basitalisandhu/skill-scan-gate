@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- SSG307 flags missing, empty, `*` and `.*` matchers on tool-event hook groups; low by default and medium only when the same group contains a command that produces SSG202 or invokes `curl`/`wget` (#3).
+
 ## [0.5.0] - 2026-10-28
 
 ### Changed

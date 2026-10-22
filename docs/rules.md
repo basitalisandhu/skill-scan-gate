@@ -1,6 +1,6 @@
 # Rules
 
-skill-scan-gate has 32 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
+skill-scan-gate has 33 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
 
 The rules are text heuristics: nothing is executed and nothing is fetched. They catch the common, obvious shapes; a clean scan means nothing obvious matched, not that a repository is safe. See [false-positives.md](false-positives.md) for baselines and allowlists.
 
@@ -26,6 +26,7 @@ Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`
 | [SSG304](#ssg304) | high | Command dumps the environment |
 | [SSG305](#ssg305) | high | Command disables security tooling or permission checks |
 | [SSG306](#ssg306) | medium | Command evaluates a constructed string as code |
+| [SSG307](#ssg307) | medium/high | Hook matcher runs on every tool call |
 | [SSG401](#ssg401) | high | MCP server runs an npm package without an exact version |
 | [SSG402](#ssg402) | high | MCP server runs a Python package without an exact version |
 | [SSG403](#ssg403) | high | MCP server package uses the latest tag |
@@ -314,6 +315,14 @@ Remediation: Fix the JSON syntax; Claude Code skips or rejects a file it cannot 
 What it catches: `allowed-tools` containing exact `Bash` or `Bash(*)`, in comma-separated, flow-list or block-list form. Scoped command declarations such as `Bash(git status *)` are not flagged. This is a breadth warning, not a claim that declaring a tool executes it.
 
 Remediation: Scope Bash to the commands the skill needs.
+
+### SSG307
+
+**Hook matcher runs on every tool call.** Severity: medium, or high when the same group contains a high-severity command.
+
+What it catches: missing, empty, `*` and `.*` matchers on tool-name events (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest` and `PermissionDenied`). Empty handler groups and non-tool events are ignored. `Bash`, `Edit|Write` and `mcp__.*` remain restricted matchers. Each group produces one finding; a dangerous command in a different group cannot promote it.
+
+Remediation: Restrict the matcher to the tools the hook needs and review every command in the group.
 
 ## Repository files (SSG7xx)
 

@@ -39,10 +39,11 @@ class Finding:
     line: int
     evidence: str
     fingerprint: str
+    severity_override: str | None = None
 
     @property
     def severity(self) -> str:
-        return RULES[self.rule].severity
+        return self.severity_override or RULES[self.rule].severity
 
     @property
     def title(self) -> str:
@@ -56,7 +57,7 @@ class Finding:
         r = RULES[self.rule]
         return {
             "rule": self.rule,
-            "severity": r.severity,
+            "severity": self.severity,
             "family": r.family,
             "title": r.title,
             "file": self.file,
@@ -174,14 +175,24 @@ class Scanner:
         self.findings: list[Finding] = []
         self.errors: list[str] = []
         self.files: list[str] = []
-        self._seen: set[tuple[str, str, int]] = set()
+        self._seen: set[tuple[str, str, int, str]] = set()
         self._occ: dict[tuple[str, str, str], int] = {}
         self._mcp_done: set[str] = set()
 
     # ---------------------------------------------------------------- plumbing
 
-    def add(self, rule: str, file: str, line: int, source: str, evidence: str | None = None) -> None:
-        key = (rule, file, line)
+    def add(
+        self,
+        rule: str,
+        file: str,
+        line: int,
+        source: str,
+        evidence: str | None = None,
+        *,
+        severity: str | None = None,
+        discriminator: str = "",
+    ) -> None:
+        key = (rule, file, line, discriminator)
         if key in self._seen:
             return
         self._seen.add(key)
@@ -196,6 +207,7 @@ class Scanner:
                 line,
                 _clip(evidence if evidence is not None else source),
                 fingerprint(rule, file, source, occ),
+                severity,
             )
         )
 
@@ -335,6 +347,42 @@ class Scanner:
     def hook_config_rules(self, rel: str, text: str, data: dict[str, Any]) -> None:
         for event, command in hook_commands(data.get("hooks")):
             self.command_rules(rel, locate(text, event, command), command)
+        hooks = data.get("hooks")
+        if not isinstance(hooks, dict):
+            return
+        for event in ("PreToolUse", "PostToolUse", "PostToolUseFailure", "PermissionRequest", "PermissionDenied"):
+            groups = hooks.get(event)
+            if not isinstance(groups, list):
+                continue
+            for index, group in enumerate(groups):
+                if not isinstance(group, dict):
+                    continue
+                matcher = group.get("matcher", "")
+                if not isinstance(matcher, str) or matcher not in ("", "*", ".*"):
+                    continue
+                handlers = group.get("hooks")
+                if not isinstance(handlers, list) or not any(isinstance(h, dict) and h.get("type") for h in handlers):
+                    continue
+                commands = [command for _, command in hook_commands({event: [group]})]
+                high = False
+                for command in commands:
+                    # Reuse command rules so promotion follows their future fixes too.
+                    probe = Scanner(self.root, self.exclude, self.blob_min)
+                    probe.command_rules(rel, 1, command)
+                    high |= any(f.severity == HIGH for f in probe.findings)
+                source = json.dumps(group, sort_keys=True)
+                evidence = f"{event} matcher {matcher!r} runs on every tool call"
+                if high:
+                    evidence += "; this group also contains a high-severity command"
+                self.add(
+                    "SSG307",
+                    rel,
+                    locate(text, event, commands[0] if commands else "hooks"),
+                    source,
+                    evidence,
+                    severity=HIGH if high else MEDIUM,
+                    discriminator=f"{event}:{index}",
+                )
 
     # ---------------------------------------------------------------- markdown rules
 

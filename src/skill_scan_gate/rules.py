@@ -132,6 +132,13 @@ _RULES = [
         "Command evaluates a constructed string as code",
         "Replace eval or exec of built strings with direct calls and check where the evaluated text comes from.",
     ),
+    Rule(
+        "SSG307",
+        "hooks",
+        MEDIUM,
+        "Hook matcher runs on every tool call",
+        "Restrict the matcher to the tools the hook needs and review every command in the group.",
+    ),
     # (d) MCP server declarations
     Rule(
         "SSG401",
