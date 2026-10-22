@@ -1,4 +1,4 @@
-::warning file=.claude-plugin/broken.json,line=4,title=SSG606::Configuration file is not valid JSON: Expecting property name enclosed in double quotes at line 4 column 1. Fix the JSON syntax; Claude Code skips or rejects a file it cannot parse, and so does this scanner.
+::warning file=.claude-plugin/broken.json,title=SSG606::Configuration file is not valid JSON: <invalid JSON>. Fix the JSON syntax; Claude Code skips or rejects a file it cannot parse, and so does this scanner.
 ::warning file=.claude-plugin/marketplace.json,line=2,title=SSG603::Name uses a reserved word or official-looking prefix: marketplace name: claude-code-plugins. Rename the plugin, skill or marketplace so it cannot be mistaken for an official one.
 ::warning file=.claude-plugin/marketplace.json,line=8,title=SSG601::Plugin or marketplace manifest has no name: plugins[0] has no name. Add a kebab-case name; Claude Code identifies plugins and marketplaces by it.
 ::notice file=.claude-plugin/plugin.json,line=1,title=SSG602::Plugin manifest has no version: plugin.json has no version. Add a semantic version so users and lock files can tell releases apart.
