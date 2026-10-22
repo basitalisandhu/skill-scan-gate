@@ -1,5 +1,11 @@
 # skill-scan-gate: CI gate for Claude Code skills and plugins
 
+In GitHub Actions, `skill-scan-gate scan . --format github` writes workflow annotations
+directly to stdout: high findings are errors, medium findings are warnings, and low
+findings are notices. Paths are relative to the repository where possible; use
+`--sarif-root` when scanning from another directory. `--fail-on`, baseline and allowlist
+filtering retain their existing behavior. Keep stdout enabled in the job to display annotations.
+
 **skill-scan-gate scans a skills or plugin repository in CI for instruction-override text, exfiltration patterns, dangerous hook commands, unpinned MCP servers and secret-shaped strings, writes SARIF for code scanning, and fails the build on findings above your threshold.**
 
 [![CI](https://github.com/basitalisandhu/skill-scan-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/basitalisandhu/skill-scan-gate/actions/workflows/ci.yml)
