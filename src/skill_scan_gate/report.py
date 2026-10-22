@@ -18,6 +18,28 @@ SECURITY_SEVERITY = {HIGH: "8.0", MEDIUM: "5.0", LOW: "2.0"}
 MARKDOWN_ROW_LIMIT = 100
 
 
+def _workflow_escape(text: str, *, property_value: bool = False) -> str:
+    text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    return text.replace(":", "%3A").replace(",", "%2C") if property_value else text
+
+
+def render_github(result: ScanResult, uri_prefix: str = "") -> str:
+    """GitHub workflow annotations, one escaped command per active finding."""
+    levels = {HIGH: "error", MEDIUM: "warning", LOW: "notice"}
+    lines: list[str] = []
+    for finding in result.findings:
+        properties = []
+        if finding.file not in ("", "."):
+            path = "/".join(p for p in (uri_prefix.strip("/"), finding.file.replace("\\", "/")) if p)
+            properties.append("file=" + _workflow_escape(path, property_value=True))
+            if finding.line > 0:
+                properties.append(f"line={finding.line}")
+        properties.append("title=" + _workflow_escape(finding.rule, property_value=True))
+        message = f"{finding.title}: {finding.evidence}. {finding.remediation}"
+        lines.append(f"::{levels[finding.severity]} {','.join(properties)}::{_workflow_escape(message)}")
+    return "\n".join(lines) + ("\n" if lines else "")
+
+
 def gate(result: ScanResult, fail_on: str) -> str:
     return "fail" if any(at_or_above(f.severity, fail_on) for f in result.findings) else "pass"
 
