@@ -15,7 +15,16 @@ from pathlib import Path
 from . import __version__
 from .changed import ChangedFilesError, changed_files, keep_changed
 from .patterns import BLOB_MIN
-from .report import gate, render_comment, render_json, render_markdown, render_sarif, render_table, summary_line
+from .report import (
+    gate,
+    render_comment,
+    render_github,
+    render_json,
+    render_markdown,
+    render_sarif,
+    render_table,
+    summary_line,
+)
 from .rules import RULES, SEVERITIES
 from .scanner import ScanResult, scan
 from .suppress import (
@@ -31,7 +40,7 @@ from .suppress import (
 EXIT_OK = 0
 EXIT_FINDINGS = 1
 EXIT_ERROR = 2
-FORMATS = ("table", "json", "sarif", "markdown")
+FORMATS = ("table", "json", "sarif", "markdown", "github")
 THRESHOLDS = (*SEVERITIES, "none")
 
 DESCRIPTION = (
@@ -179,6 +188,7 @@ def _cmd_scan(a: argparse.Namespace) -> int:
         "json": lambda: render_json(result, a.fail_on),
         "sarif": lambda: render_sarif(result, prefix),
         "markdown": lambda: render_markdown(result, a.fail_on),
+        "github": lambda: render_github(result, prefix),
     }
     text = renderers[a.format]()
     if a.output:

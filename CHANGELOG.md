@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `scan --format github`: escaped GitHub Actions error, warning and notice annotations with repository-relative locations; the existing gate and exit codes are unchanged (#5).
+
 ## [0.5.0] - 2026-10-28
 
 ### Changed
