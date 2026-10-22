@@ -86,7 +86,7 @@ A Claude Code skill is Markdown the model reads as instructions. A plugin adds h
 skill-scan-gate is for maintainers of skills repositories, plugin authors and marketplace owners, and for any team that keeps agent configuration in git and reviews it in pull requests. It runs the same checks on every change and blocks the merge when it finds something at or above the severity you choose.
 
 - **What it reads:** `SKILL.md`, `CLAUDE.md`, `AGENTS.md`, `.cursor/rules`, `commands/*.md`, `agents/*.md`, `hooks/hooks.json`, `.claude-plugin/*.json`, `.mcp.json`, `settings.json`, `.claude/settings.local.json`, and scripts under `scripts/` or `hooks/`, at any depth.
-- **What it finds:** 32 rules in seven families: instruction overrides, exfiltration shapes, dangerous hook commands, unpinned or insecure MCP servers, secret-shaped strings, manifest problems, and missing `SECURITY.md` or `LICENSE`. Every finding has a severity, `path:line` and a one-sentence remediation.
+- **What it finds:** 33 rules in seven families: instruction overrides, exfiltration shapes, dangerous hook commands, unpinned or insecure MCP servers, secret-shaped strings, manifest problems, and missing `SECURITY.md` or `LICENSE`. Every finding has a severity, `path:line` and a one-sentence remediation.
 - **What it writes:** a table, JSON, Markdown for the job summary, and SARIF 2.1.0 for GitHub code scanning.
 - **How it gates:** `--fail-on low|medium|high` sets the threshold; a baseline lets you adopt it on an existing repository and fail only on new findings.
 
@@ -224,6 +224,7 @@ Every rule, what it catches, its scope and its remediation: [docs/rules.md](docs
 | SSG304 | hooks | high | Command dumps the environment |
 | SSG305 | hooks | high | Command disables security tooling or permission checks |
 | SSG306 | hooks | medium | Command evaluates a constructed string as code |
+| SSG307 | hooks | medium/high | Hook matcher runs on every tool call |
 | SSG401 | mcp | high | MCP server runs an npm package without an exact version |
 | SSG402 | mcp | high | MCP server runs a Python package without an exact version |
 | SSG403 | mcp | high | MCP server package uses the latest tag |

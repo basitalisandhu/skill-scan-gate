@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- SSG307 flags missing, empty, `*` and `.*` matchers on tool-event hook groups; medium by default and high only when the same group contains a high-severity command (#3).
+
 ## [0.4.0] - 2026-10-20
 
 ### Added
