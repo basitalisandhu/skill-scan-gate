@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 
 from skill_scan_gate.cli import main
@@ -33,7 +34,13 @@ def test_planted_golden():
     from skill_scan_gate.scanner import scan
 
     expected = Path(__file__).parent / "fixtures" / "planted.github.txt"
-    assert render_github(scan(PLANTED)) == expected.read_text(encoding="utf-8")
+    result = scan(PLANTED)
+    # CPython minor versions use different JSONDecodeError wording and locations.
+    result.findings = [
+        replace(finding, evidence="<invalid JSON>", line=0) if finding.rule == "SSG606" else finding
+        for finding in result.findings
+    ]
+    assert render_github(result) == expected.read_text(encoding="utf-8")
 
 
 def test_cli_preserves_fail_on_and_suppression(tmp_path, capsys):
