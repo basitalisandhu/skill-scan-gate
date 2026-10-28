@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - `scan --format github`: escaped GitHub Actions error, warning and notice annotations with repository-relative locations; the existing gate and exit codes are unchanged (#5).
+- SSG307 flags missing, empty, `*` and `.*` matchers on tool-event hook groups; low by default and medium only when the same group contains a command that produces SSG202 or invokes `curl`/`wget` (#3).
 
 ## [0.5.0] - 2026-10-28
 
