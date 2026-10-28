@@ -1,11 +1,5 @@
 # skill-scan-gate: CI gate for Claude Code skills and plugins
 
-In GitHub Actions, `skill-scan-gate scan . --format github` writes workflow annotations
-directly to stdout: high findings are errors, medium findings are warnings, and low
-findings are notices. Paths are relative to the repository where possible; use
-`--sarif-root` when scanning from another directory. `--fail-on`, baseline and allowlist
-filtering retain their existing behavior. Keep stdout enabled in the job to display annotations.
-
 **skill-scan-gate scans a skills or plugin repository in CI for instruction-override text, exfiltration patterns, dangerous hook commands, unpinned MCP servers and secret-shaped strings, writes SARIF for code scanning, and fails the build on findings above your threshold.**
 
 [![CI](https://github.com/basitalisandhu/skill-scan-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/basitalisandhu/skill-scan-gate/actions/workflows/ci.yml)
@@ -93,7 +87,7 @@ skill-scan-gate is for maintainers of skills repositories, plugin authors and ma
 
 - **What it reads:** `SKILL.md`, `CLAUDE.md`, `AGENTS.md`, `.cursor/rules`, `commands/*.md`, `agents/*.md`, `hooks/hooks.json`, `.claude-plugin/*.json`, `.mcp.json`, `settings.json`, `.claude/settings.local.json`, and scripts under `scripts/` or `hooks/`, at any depth.
 - **What it finds:** 32 rules in seven families: instruction overrides, exfiltration shapes, dangerous hook commands, unpinned or insecure MCP servers, secret-shaped strings, manifest problems, and missing `SECURITY.md` or `LICENSE`. Every finding has a severity, `path:line` and a one-sentence remediation.
-- **What it writes:** a table, JSON, Markdown for the job summary, and SARIF 2.1.0 for GitHub code scanning.
+- **What it writes:** a table, JSON, Markdown for the job summary, SARIF 2.1.0 for GitHub code scanning, and GitHub Actions workflow annotations.
 - **How it gates:** `--fail-on low|medium|high` sets the threshold; a baseline lets you adopt it on an existing repository and fail only on new findings.
 
 Standard library only, Python 3.11 or newer, no network access. It reads files and never executes them.
@@ -156,10 +150,17 @@ Outputs: `finding-count`, `highest-severity`, `gate` (`pass` or `fail`), `suppre
 skill-scan-gate scan .                                   # table, fail on high
 skill-scan-gate scan . --fail-on medium --sarif out.sarif
 skill-scan-gate scan . --format json --output report.json
+skill-scan-gate scan . --format github                     # workflow annotations on stdout
 skill-scan-gate baseline . --out .skill-scan-gate-baseline.json
 skill-scan-gate scan . --baseline .skill-scan-gate-baseline.json --allow .skill-scan-gate-allow
 skill-scan-gate rules                                    # list every rule
 ```
+
+In GitHub Actions, `skill-scan-gate scan . --format github` writes workflow annotations
+directly to stdout: high findings are errors, medium findings are warnings, and low
+findings are notices. Paths are relative to the repository where possible; use
+`--sarif-root` when scanning from another directory. `--fail-on`, baseline and allowlist
+filtering retain their existing behavior. Keep stdout enabled in the job to display annotations.
 
 Exit codes: `0` no finding at or above the threshold, `1` at least one, `2` usage or input error (missing directory, unreadable baseline, malformed allowlist).
 
