@@ -364,23 +364,24 @@ class Scanner:
                 if not isinstance(handlers, list) or not any(isinstance(h, dict) and h.get("type") for h in handlers):
                     continue
                 commands = [command for _, command in hook_commands({event: [group]})]
-                high = False
+                risky = False
                 for command in commands:
                     # Reuse command rules so promotion follows their future fixes too.
                     probe = Scanner(self.root, self.exclude, self.blob_min)
                     probe.command_rules(rel, 1, command)
-                    high |= any(f.severity == HIGH for f in probe.findings)
+                    risky |= any(f.rule == "SSG202" for f in probe.findings)
+                    risky |= bool(P.NETWORK_VERB.search(command))
                 source = json.dumps(group, sort_keys=True)
                 evidence = f"{event} matcher {matcher!r} runs on every tool call"
-                if high:
-                    evidence += "; this group also contains a high-severity command"
+                if risky:
+                    evidence += "; this group also contains a command that uploads a file or invokes curl/wget"
                 self.add(
                     "SSG307",
                     rel,
                     locate(text, event, commands[0] if commands else "hooks"),
                     source,
                     evidence,
-                    severity=HIGH if high else MEDIUM,
+                    severity=MEDIUM if risky else LOW,
                     discriminator=f"{event}:{index}",
                 )
 

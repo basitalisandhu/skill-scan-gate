@@ -135,7 +135,7 @@ _RULES = [
     Rule(
         "SSG307",
         "hooks",
-        MEDIUM,
+        LOW,
         "Hook matcher runs on every tool call",
         "Restrict the matcher to the tools the hook needs and review every command in the group.",
     ),

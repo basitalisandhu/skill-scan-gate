@@ -224,7 +224,7 @@ Every rule, what it catches, its scope and its remediation: [docs/rules.md](docs
 | SSG304 | hooks | high | Command dumps the environment |
 | SSG305 | hooks | high | Command disables security tooling or permission checks |
 | SSG306 | hooks | medium | Command evaluates a constructed string as code |
-| SSG307 | hooks | medium/high | Hook matcher runs on every tool call |
+| SSG307 | hooks | low/medium | Hook matcher runs on every tool call |
 | SSG401 | mcp | high | MCP server runs an npm package without an exact version |
 | SSG402 | mcp | high | MCP server runs a Python package without an exact version |
 | SSG403 | mcp | high | MCP server package uses the latest tag |

@@ -26,7 +26,7 @@ Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`
 | [SSG304](#ssg304) | high | Command dumps the environment |
 | [SSG305](#ssg305) | high | Command disables security tooling or permission checks |
 | [SSG306](#ssg306) | medium | Command evaluates a constructed string as code |
-| [SSG307](#ssg307) | medium/high | Hook matcher runs on every tool call |
+| [SSG307](#ssg307) | low/medium | Hook matcher runs on every tool call |
 | [SSG401](#ssg401) | high | MCP server runs an npm package without an exact version |
 | [SSG402](#ssg402) | high | MCP server runs a Python package without an exact version |
 | [SSG403](#ssg403) | high | MCP server package uses the latest tag |
@@ -318,7 +318,7 @@ Remediation: Scope Bash to the commands the skill needs.
 
 ### SSG307
 
-**Hook matcher runs on every tool call.** Severity: medium, or high when the same group contains a high-severity command.
+**Hook matcher runs on every tool call.** Severity: low, or medium when the same group contains a command that produces SSG202 or invokes `curl`/`wget`.
 
 What it catches: missing, empty, `*` and `.*` matchers on tool-name events (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest` and `PermissionDenied`). Empty handler groups and non-tool events are ignored. `Bash`, `Edit|Write` and `mcp__.*` remain restricted matchers. Each group produces one finding; a dangerous command in a different group cannot promote it.
 
