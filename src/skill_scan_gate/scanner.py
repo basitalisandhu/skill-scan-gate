@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from . import _jsondepth
 from . import patterns as P
 from .discover import (
     HOOKS_CONFIG,
@@ -227,7 +228,7 @@ class Scanner:
 
     def load_json(self, rel: str, text: str) -> Any:
         try:
-            return json.loads(text)
+            return _jsondepth.loads(text)
         except json.JSONDecodeError as e:
             lines = text.splitlines()
             src = lines[e.lineno - 1] if 0 < e.lineno <= len(lines) else ""

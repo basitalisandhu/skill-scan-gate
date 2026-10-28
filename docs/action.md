@@ -102,5 +102,5 @@ token and must never check out or scan the fork's code with it.
 ## Pinning
 
 Pin the Action to a full commit SHA with the version in a comment, for example
-`basitalisandhu/skill-scan-gate@<sha> # v0.5.0`; Dependabot keeps both up to date. Look up the SHA of a
-tag with `gh api repos/basitalisandhu/skill-scan-gate/commits/v0.5.0 --jq .sha`.
+`basitalisandhu/skill-scan-gate@<sha> # v0.6.0`; Dependabot keeps both up to date. Look up the SHA of a
+tag with `gh api repos/basitalisandhu/skill-scan-gate/commits/v0.6.0 --jq .sha`.

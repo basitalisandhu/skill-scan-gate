@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from . import __version__
+from . import __version__, _jsondepth
 from .rules import RULES
 from .scanner import Finding
 
@@ -62,7 +62,7 @@ def write_baseline(path: Path, findings: list[Finding]) -> None:
 
 def load_baseline(path: Path) -> Counter[str]:
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = _jsondepth.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as e:
         raise SuppressionError(f"baseline not found: {path}") from e
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:

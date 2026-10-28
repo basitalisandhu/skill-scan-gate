@@ -6,10 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-29
+
 ### Added
 
 - `scan --format github`: escaped GitHub Actions error, warning and notice annotations with repository-relative locations; the existing gate and exit codes are unchanged (#5).
 - SSG307 flags missing, empty, `*` and `.*` matchers on tool-event hook groups; low by default and medium only when the same group contains a command that produces SSG202 or invokes `curl`/`wget` (#3).
+
+### Fixed
+
+- Deeply nested JSON in a scanned config file is SSG606 and a deep `--baseline` exits 2 on every supported Python. Python 3.14 no longer raises `RecursionError` from `json.loads` at the old depth (50,000 balanced brackets parsed without a finding), so JSON is now checked for nesting first (limit 200 levels) instead of relying on it.
+- CI tests Python 3.11 to 3.14.
 
 ## [0.5.0] - 2026-10-28
 
@@ -84,7 +91,8 @@ All notable changes to this project are documented here. The format follows
 - Composite GitHub Action (`action.yml`) with inputs `path`, `fail-on`, `baseline`, `allow`, `exclude`, `sarif`, `sarif-file`, `upload-sarif`, `category` and `python-version`; job summary; SARIF upload with `github/codeql-action/upload-sarif` pinned by commit.
 - Planted and clean fixtures, a run-time secret fixture generator, a self-test workflow that runs the Action on them, CI on Python 3.11, 3.12 and 3.13, a container image `ghcr.io/basitalisandhu/skill-scan-gate` published on version tags with an SPDX SBOM, a build provenance attestation and a keyless cosign signature, and PyPI trusted publishing (off until the repository variable `PYPI_PUBLISH` is set).
 
-[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.2.0...v0.3.0

@@ -18,7 +18,7 @@ skill-scan-gate scan path/to/your-skills --fail-on medium --sarif skill-scan-gat
 Output on a repository with one skill that tells the model to ignore its instructions and sends a key file to a URL (run on 2026-10-20):
 
 ```text
-skill-scan-gate 0.5.0: scanned 1 file(s) under my-skills
+skill-scan-gate 0.6.0: scanned 1 file(s) under my-skills
 
 SEVERITY  RULE    LOCATION                TITLE
 ----------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@cd9b3ffda8e493c6733321263044fe326b6251a5 # v0.5.0
+      - uses: basitalisandhu/skill-scan-gate@v0.6.0
         with:
           comment: "true"
           upload-sarif: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -76,7 +76,7 @@ pip install skill-scan-gate
 Container image (GitHub Packages):
 
 ```bash
-docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.5.0 scan .
+docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.6.0 scan .
 ```
 
 ## What it is, who it is for, and why
@@ -117,7 +117,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@v0.5.0   # pin to a commit SHA in production
+      - uses: basitalisandhu/skill-scan-gate@v0.6.0   # pin to a commit SHA in production
         with:
           path: .
           fail-on: high
@@ -170,7 +170,7 @@ The repository ships a planted fixture with one example of each committable prob
 
 ```text
 $ skill-scan-gate scan tests/fixtures/fixture-planted
-skill-scan-gate 0.5.0: scanned 12 file(s) under tests/fixtures/fixture-planted
+skill-scan-gate 0.6.0: scanned 12 file(s) under tests/fixtures/fixture-planted
 
 SEVERITY  RULE    LOCATION                          TITLE
 --------------------------------------------------------------------------------------------
@@ -193,7 +193,7 @@ high      SSG201  skills/helper/SKILL.md:13         URL carries an environment v
 35 finding(s): 18 high, 13 medium, 4 low; gate fail (fail-on high).
 
 $ skill-scan-gate scan tests/fixtures/fixture-clean --fail-on low
-skill-scan-gate 0.5.0: scanned 10 file(s) under tests/fixtures/fixture-clean
+skill-scan-gate 0.6.0: scanned 10 file(s) under tests/fixtures/fixture-clean
 
 No findings.
 
