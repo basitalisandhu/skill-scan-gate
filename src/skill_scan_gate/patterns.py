@@ -215,20 +215,82 @@ CREDENTIAL_ASSIGNMENT = re.compile(
 
 # ---------------------------------------------------------------- (f) manifests
 
-# The Agent Skills naming rules reserve the words below in skill names. Plugin and marketplace
-# names that start with them, or that equal a marketplace name Claude Code reserves for official
-# use, can be mistaken for official ones. Re-check both lists against the current documentation.
+# Reserved names, checked against the Claude Code documentation on 2026-10-28:
+#   https://code.claude.com/docs/en/plugins/marketplace-reference#reserved-names (marketplaces)
+#   https://code.claude.com/docs/en/plugins/manifest-reference#name (plugins)
+# The Agent Skills naming rules reserve the words below in skill names.
 RESERVED_WORDS = ("anthropic", "claude")
 RESERVED_MARKETPLACE_NAMES = frozenset(
     {
+        # official
         "claude-code-marketplace",
         "claude-code-plugins",
         "claude-plugins-official",
         "anthropic-marketplace",
         "anthropic-plugins",
         "agent-skills",
+        "anthropic-agent-skills",
+        "life-sciences",
+        "knowledge-work-plugins",
+        "claude-for-legal",
+        "claude-for-financial-services",
+        "financial-services-plugins",
+        "first-party-plugins",
+        "claude-tag-plugins",
+        # community
+        "claude-community",
+        "claude-plugins-community",
+        "healthcare",
+        # plugin directory
+        "anthropic-plugin-directory",
+        "claude-plugin-directory",
     }
 )
+# Names Claude Code uses itself (any casing) and members every JavaScript object has (exact).
+RESERVED_MARKETPLACE_SYSTEM_NAMES = frozenset(
+    {"inline", "builtin", "skills-dir", "synced", "claude-plugin-test", "npm", "pip", "uv", "cargo", "github", "gh"}
+)
+RESERVED_MARKETPLACE_JS_NAMES = frozenset(
+    {"constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "toString", "valueOf"}
+)
+RESERVED_PLUGIN_PREFIXES = ("claude-", "anthropic-", "anthropics-", "cc-plugin-")
+RESERVED_PLUGIN_NAMES = frozenset({"claude", "anthropic", "anthropics", "claude-code", "claude-mods"})
+_SEPARATORS = re.compile(r"[^a-z0-9]+")
+_OFFICIAL_BESIDE = re.compile(r"(?:^|-)official-(?:claude|anthropic)|(?:claude|anthropic)s?-official(?:-|$)")
+
+
+def reserved_marketplace_reason(name: str) -> str | None:
+    """Why Claude Code refuses this marketplace name, or None."""
+    if any(ord(ch) > 127 for ch in name):
+        return "contains a non-ASCII character, which Claude Code treats as impersonating an official marketplace"
+    low = name.lower()
+    if low in RESERVED_MARKETPLACE_NAMES:
+        return "is reserved for official Anthropic marketplaces"
+    # Another spelling: a trailing dot, or a symbol other than an underscore in place of a hyphen.
+    spelled = re.sub(r"[^a-z0-9_]", "-", low.rstrip("."))
+    if spelled in RESERVED_MARKETPLACE_NAMES:
+        return f'is another spelling of "{spelled}", a reserved marketplace name'
+    if low in RESERVED_MARKETPLACE_SYSTEM_NAMES or name in RESERVED_MARKETPLACE_JS_NAMES:
+        return "is a name Claude Code reserves for its own use"
+    if low.startswith("claudeai-"):
+        return 'starts with "claudeai-", reserved for marketplaces hosted on claude.ai'
+    if low.startswith(RESERVED_WORDS) or _OFFICIAL_BESIDE.search(_SEPARATORS.sub("-", low)):
+        return "can be mistaken for an official Anthropic marketplace"
+    return None
+
+
+def reserved_plugin_reason(name: str) -> str | None:
+    """Why claude plugin validate reports this plugin name as passing for one of Anthropic's own, or None."""
+    norm = _SEPARATORS.sub("-", name.lower()).strip("-")
+    if norm in RESERVED_PLUGIN_NAMES:
+        return "is reserved: it passes as one of Anthropic's own"
+    if norm.startswith(RESERVED_PLUGIN_PREFIXES) or name.lower().startswith(RESERVED_WORDS):
+        return "starts with a reserved prefix: it passes as one of Anthropic's own"
+    if _OFFICIAL_BESIDE.search(norm):
+        return 'puts "official" beside claude or anthropic: it passes as one of Anthropic\'s own'
+    return None
+
+
 ALWAYS_RUN = re.compile(
     r"\balways\b[^.\n]{0,25}?\b(?:use|invoke|run|load|apply|activate|trigger)\b"
     r"|\b(?:use|invoke|run|load|apply|activate|trigger)\b[^.\n]{0,25}?"

@@ -221,6 +221,10 @@ class Scanner:
             src = lines[e.lineno - 1] if 0 < e.lineno <= len(lines) else ""
             self.add("SSG606", rel, e.lineno, src, f"{e.msg} at line {e.lineno} column {e.colno}")
             return None
+        except RecursionError:
+            first = text.splitlines()[0] if text else ""
+            self.add("SSG606", rel, 1, first, "JSON nested too deeply to parse")
+            return None
 
     # ---------------------------------------------------------------- entry point
 
@@ -430,11 +434,10 @@ class Scanner:
         return secret_lines
 
     def _reserved_name(self, rel: str, text: str, name: str, plugin: bool) -> None:
-        low = name.lower()
-        hit = low in P.RESERVED_MARKETPLACE_NAMES or any(low.startswith(w) for w in P.RESERVED_WORDS)
-        if hit:
+        reason = P.reserved_plugin_reason(name) if plugin else P.reserved_marketplace_reason(name)
+        if reason:
             kind = "plugin" if plugin else "marketplace"
-            self.add("SSG603", rel, locate(text, f'"{name}"'), f"{kind} name: {name}")
+            self.add("SSG603", rel, locate(text, f'"{name}"'), f"{kind} name: {name}", f"{kind} name {name!r} {reason}")
 
     def _follow_mcp_ref(self, rel: str, ref: Any) -> None:
         if not isinstance(ref, str) or not ref.startswith("./") or ".." in ref.split("/"):

@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-28
+
+### Changed
+
+- SSG603 follows the reserved-name rules in the Claude Code plugin documentation, checked on 2026-10-28 (#8): all official, community and plugin directory marketplace names, another spelling of one (`claude.code.plugins`, a trailing dot), the names Claude Code uses itself (`inline`, `builtin`, `skills-dir`, `synced`, `npm`, `github` and others), JavaScript object member names, `claudeai-` names, non-ASCII names, and plugin names `claude plugin validate` rejects (`claude-code`, `claude-mods`, `cc-plugin-*`, official beside claude or anthropic). The finding's evidence now says why the name is reserved.
+
+### Fixed
+
+- A JSON file nested too deeply to parse is reported as SSG606 instead of ending the scan with a traceback.
+- A `--baseline` or `--allow` file that is not UTF-8, or a baseline nested too deeply, exits with code 2 and a message naming the file instead of a traceback.
+- The FAQ said `--changed-only` did not exist yet; it does, since 0.4.0.
+
+### Added
+
+- Seeded fuzz tests: every file the scanner reads replaced with empty, non-UTF-8, truncated, deeply nested or NUL bytes, and JSON values replaced with values of the wrong type; each run has a time limit.
+- A scaling test (10 and 100 plugins, a 2,000 and a 20,000 line SKILL.md).
+- A CI job that installs with pipx from the checkout and compares the README quick start output line by line.
+- A Troubleshooting section in the README.
+
 ## [0.4.0] - 2026-10-20
 
 ### Added
@@ -60,7 +79,8 @@ All notable changes to this project are documented here. The format follows
 - Composite GitHub Action (`action.yml`) with inputs `path`, `fail-on`, `baseline`, `allow`, `exclude`, `sarif`, `sarif-file`, `upload-sarif`, `category` and `python-version`; job summary; SARIF upload with `github/codeql-action/upload-sarif` pinned by commit.
 - Planted and clean fixtures, a run-time secret fixture generator, a self-test workflow that runs the Action on them, CI on Python 3.11, 3.12 and 3.13, a container image `ghcr.io/basitalisandhu/skill-scan-gate` published on version tags with an SPDX SBOM, a build provenance attestation and a keyless cosign signature, and PyPI trusted publishing (off until the repository variable `PYPI_PUBLISH` is set).
 
-[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/basitalisandhu/skill-scan-gate/compare/v0.1.0...v0.2.0

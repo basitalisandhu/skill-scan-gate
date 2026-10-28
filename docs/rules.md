@@ -273,7 +273,13 @@ Remediation: Add a semantic version so users and lock files can tell releases ap
 
 **Name uses a reserved word or official-looking prefix.** Severity: medium
 
-What it catches: Plugin and marketplace names that start with anthropic or claude, marketplace names Claude Code reserves for official marketplaces (for example claude-plugins-official, anthropic-marketplace, agent-skills), and skill names that contain the reserved words anthropic or claude. The lists live in patterns.py; check them against the current Claude Code documentation.
+What it catches, following the Claude Code documentation (checked 2026-10-28):
+
+- Marketplace names Claude Code refuses ([reserved names](https://code.claude.com/docs/en/plugins/marketplace-reference#reserved-names)): the official, community and plugin directory names (for example `claude-plugins-official`, `knowledge-work-plugins`, `claude-plugins-community`, `claude-plugin-directory`), another spelling of one (a trailing dot, or any symbol other than an underscore in place of a hyphen, so `claude.code.plugins`), the names Claude Code uses itself (`inline`, `builtin`, `skills-dir`, `synced`, `claude-plugin-test`, `npm`, `pip`, `uv`, `cargo`, `github`, `gh`), JavaScript object member names such as `toString`, names starting with `claudeai-`, names with a non-ASCII character, and names that start with anthropic or claude or put official beside them.
+- Plugin names `claude plugin validate` reports as an error ([`name`](https://code.claude.com/docs/en/plugins/manifest-reference#name)): `claude`, `anthropic`, `anthropics`, `claude-code`, `claude-mods`, names starting with `claude-`, `anthropic-`, `anthropics-` or `cc-plugin-` (case and runs of separators ignored), and names that put official beside claude or anthropic. A whole word elsewhere, such as `mcp-for-claude`, is only a validator warning and is not flagged.
+- Skill names that contain the reserved words anthropic or claude (Agent Skills naming rules).
+
+The lists live in `src/skill_scan_gate/patterns.py` with the date they were last checked.
 
 Remediation: Rename the plugin, skill or marketplace so it cannot be mistaken for an official one.
 

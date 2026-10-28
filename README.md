@@ -18,7 +18,7 @@ skill-scan-gate scan path/to/your-skills --fail-on medium --sarif skill-scan-gat
 Output on a repository with one skill that tells the model to ignore its instructions and sends a key file to a URL (run on 2026-10-20):
 
 ```text
-skill-scan-gate 0.4.0: scanned 1 file(s) under my-skills
+skill-scan-gate 0.5.0: scanned 1 file(s) under my-skills
 
 SEVERITY  RULE    LOCATION                TITLE
 ----------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@e2ca61f34deddbf002872b1200ba8afb78392e91 # v0.4.0
+      - uses: basitalisandhu/skill-scan-gate@v0.5.0
         with:
           comment: "true"
           upload-sarif: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -76,7 +76,7 @@ pip install skill-scan-gate
 Container image (GitHub Packages):
 
 ```bash
-docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.4.0 scan .
+docker run --rm -v "$PWD:/work:ro" ghcr.io/basitalisandhu/skill-scan-gate:0.5.0 scan .
 ```
 
 ## What it is, who it is for, and why
@@ -117,7 +117,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: basitalisandhu/skill-scan-gate@v0.4.0   # pin to a commit SHA in production
+      - uses: basitalisandhu/skill-scan-gate@v0.5.0   # pin to a commit SHA in production
         with:
           path: .
           fail-on: high
@@ -163,7 +163,7 @@ The repository ships a planted fixture with one example of each committable prob
 
 ```text
 $ skill-scan-gate scan tests/fixtures/fixture-planted
-skill-scan-gate 0.4.0: scanned 12 file(s) under tests/fixtures/fixture-planted
+skill-scan-gate 0.5.0: scanned 12 file(s) under tests/fixtures/fixture-planted
 
 SEVERITY  RULE    LOCATION                          TITLE
 --------------------------------------------------------------------------------------------
@@ -186,7 +186,7 @@ high      SSG201  skills/helper/SKILL.md:13         URL carries an environment v
 35 finding(s): 18 high, 13 medium, 4 low; gate fail (fail-on high).
 
 $ skill-scan-gate scan tests/fixtures/fixture-clean --fail-on low
-skill-scan-gate 0.4.0: scanned 10 file(s) under tests/fixtures/fixture-clean
+skill-scan-gate 0.5.0: scanned 10 file(s) under tests/fixtures/fixture-clean
 
 No findings.
 
@@ -273,10 +273,27 @@ A security skill that quotes an injection phrase is text the model reads too. Qu
 Yes, the instruction rules read `.cursor/rules/*`, `.cursorrules` and `AGENTS.md` as well as Claude Code files.
 
 **Can I run it on a pull request diff only?**
-Not yet; it scans the whole directory. A baseline gives the same effect for adoption. A `--changed-only` option is listed in [docs/good-first-issues.md](docs/good-first-issues.md).
+Yes: `scan --changed-only BASE_REF` reports only findings in files changed since `BASE_REF`, and the Action's `changed-only` input does the same on pull requests. A baseline is the other way to adopt it on an existing repository.
 
 **Does it send anything anywhere?**
 The scanner makes no network calls. The Action uploads SARIF to your own repository's code scanning only when `upload-sarif` is true.
+
+## Troubleshooting
+
+Each message below is real output. Bad input exits with code 2; findings at or above `--fail-on` exit with code 1.
+
+| You see | What it means | Fix |
+|---|---|---|
+| `error: externally-managed-environment` from `pip install` | Your system Python refuses installs outside a virtual environment. | Use `pipx install git+https://github.com/basitalisandhu/skill-scan-gate`, or a venv. |
+| `skill-scan-gate: not a directory: path/to/your-skills` | `scan` takes a directory, not a file. | Pass the repository root or the skills folder. |
+| A warning that nothing was scanned, with `0 finding(s)` | No SKILL.md, plugin manifest, MCP, hook, settings or script file under the path. | Check the path; a clean result on the wrong folder means nothing. |
+| `4 finding(s)` where you expected 2, with `SSG701 No SECURITY.md` and `SSG702 No LICENSE file` | The repository checks run on the root you scan. | Add the files, or scan the repository root rather than a subfolder. |
+| `skill-scan-gate: baseline not found: FILE` | `--baseline` names a file that does not exist yet. | Write one first with `skill-scan-gate baseline . --out FILE`. |
+| `skill-scan-gate: baseline FILE is not readable JSON: ...` | The baseline is empty, cut off, not UTF-8 or nested too deeply. | Write it again with `skill-scan-gate baseline`. |
+| `skill-scan-gate: FILE:1: expected '<rule id or *> <path glob>[:line] [# reason]'` | A line in the `--allow` file is not an allowlist entry. | One entry per line, for example `SSG204 skills/notify/SKILL.md  # our own webhook`. |
+| `skill-scan-gate: --blob-min must be at least 64 (got 10)` | The base64 threshold is too low to be useful. | Use 64 or more; the default is 200. |
+| `--changed-only` exits 2 in GitHub Actions | The checkout has no history, so the base ref is unknown. | Use `actions/checkout` with `fetch-depth: 0`; see [docs/action.md](docs/action.md). |
+| `SSG606 Configuration file is not valid JSON` on a file Claude Code loads | The file has a trailing comma, a comment or a cut-off end, or is nested too deeply. | Fix the JSON; Claude Code would skip or reject the file too. |
 
 ## What this is not
 

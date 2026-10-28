@@ -65,8 +65,10 @@ def load_baseline(path: Path) -> Counter[str]:
         data = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as e:
         raise SuppressionError(f"baseline not found: {path}") from e
-    except (OSError, json.JSONDecodeError) as e:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
         raise SuppressionError(f"baseline {path} is not readable JSON: {e}") from e
+    except RecursionError as e:
+        raise SuppressionError(f"baseline {path} is not readable JSON: nested too deeply") from e
     if not isinstance(data, dict) or data.get("tool") != "skill-scan-gate":
         raise SuppressionError(f"baseline {path} was not written by skill-scan-gate")
     if data.get("baselineVersion") != BASELINE_VERSION:
@@ -124,7 +126,7 @@ def load_allowlist(path: Path) -> list[AllowEntry]:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError as e:
         raise SuppressionError(f"allowlist not found: {path}") from e
-    except OSError as e:
+    except (OSError, UnicodeDecodeError) as e:
         raise SuppressionError(f"allowlist {path} is not readable: {e}") from e
     entries: list[AllowEntry] = []
     for n, raw in enumerate(text.splitlines(), 1):
