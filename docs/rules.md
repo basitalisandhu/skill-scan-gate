@@ -1,6 +1,6 @@
 # Rules
 
-skill-scan-gate has 33 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
+skill-scan-gate has 34 rules in seven families. Each finding carries a rule id, a severity (low, medium or high), a path and 1-based line relative to the scanned directory, short evidence (secrets redacted) and the one-sentence remediation below.
 
 The rules are text heuristics: nothing is executed and nothing is fetched. They catch the common, obvious shapes; a clean scan means nothing obvious matched, not that a repository is safe. See [false-positives.md](false-positives.md) for baselines and allowlists.
 
@@ -43,6 +43,7 @@ Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`
 | [SSG605](#ssg605) | medium | Skill description claims it should always run |
 | [SSG606](#ssg606) | medium | Configuration file is not valid JSON |
 | [SSG607](#ssg607) | low | Skill declares unrestricted Bash access |
+| [SSG608](#ssg608) | low | Plugin name resembles an Anthropic name (validator warning) |
 | [SSG701](#ssg701) | low | No SECURITY.md |
 | [SSG702](#ssg702) | low | No LICENSE file |
 
@@ -277,7 +278,7 @@ Remediation: Add a semantic version so users and lock files can tell releases ap
 What it catches, following the Claude Code documentation (checked 2026-10-28):
 
 - Marketplace names Claude Code refuses ([reserved names](https://code.claude.com/docs/en/plugins/marketplace-reference#reserved-names)): the official, community and plugin directory names (for example `claude-plugins-official`, `knowledge-work-plugins`, `claude-plugins-community`, `claude-plugin-directory`), another spelling of one (a trailing dot, or any symbol other than an underscore in place of a hyphen, so `claude.code.plugins`), the names Claude Code uses itself (`inline`, `builtin`, `skills-dir`, `synced`, `claude-plugin-test`, `npm`, `pip`, `uv`, `cargo`, `github`, `gh`), JavaScript object member names such as `toString`, names starting with `claudeai-`, names with a non-ASCII character, and names that start with anthropic or claude or put official beside them.
-- Plugin names `claude plugin validate` reports as an error ([`name`](https://code.claude.com/docs/en/plugins/manifest-reference#name)): `claude`, `anthropic`, `anthropics`, `claude-code`, `claude-mods`, names starting with `claude-`, `anthropic-`, `anthropics-` or `cc-plugin-` (case and runs of separators ignored), and names that put official beside claude or anthropic. A whole word elsewhere, such as `mcp-for-claude`, is only a validator warning and is not flagged.
+- Plugin names `claude plugin validate` reports as an error ([`name`](https://code.claude.com/docs/en/plugins/manifest-reference#name)): `claude`, `anthropic`, `anthropics`, `claude-code`, `claude-mods`, names starting with `claude-`, `anthropic-`, `anthropics-` or `cc-plugin-` (case and runs of separators ignored), and names that put official beside claude or anthropic. A whole word elsewhere, such as `mcp-for-claude`, gets the separate low-severity SSG608 validator warning.
 - Skill names that contain the reserved words anthropic or claude (Agent Skills naming rules).
 
 The lists live in `src/skill_scan_gate/patterns.py` with the date they were last checked.
@@ -323,6 +324,15 @@ Remediation: Scope Bash to the commands the skill needs.
 What it catches: missing, empty, `*` and `.*` matchers on tool-name events (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest` and `PermissionDenied`). Empty handler groups and non-tool events are ignored. `Bash`, `Edit|Write` and `mcp__.*` remain restricted matchers. Each group produces one finding; a dangerous command in a different group cannot promote it.
 
 Remediation: Restrict the matcher to the tools the hook needs and review every command in the group.
+
+### SSG608
+
+**Plugin name resembles an Anthropic name (validator warning).** Severity: low
+
+What it catches: A whole-word `claude`, `anthropic` or `anthropics` appearing elsewhere in a plugin name (for example `mcp-for-claude`, `tools.anthropic.extras`, `my_claude_kit`) when the reserved-name error rule SSG603 does not apply. This mirrors the lower-tier warning; marketplace names and skills keep their existing separate policy.
+
+Remediation: Use a clearly distinct plugin name; this is a warning, not an upstream rejection.
+
 
 ## Repository files (SSG7xx)
 

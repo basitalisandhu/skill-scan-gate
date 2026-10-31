@@ -254,6 +254,13 @@ _RULES = [
         "Skill declares unrestricted Bash access",
         "Scope Bash to the commands the skill needs instead of declaring Bash or Bash(*).",
     ),
+    Rule(
+        "SSG608",
+        "manifest",
+        LOW,
+        "Plugin name resembles an Anthropic name (validator warning)",
+        "Use a clearly distinct plugin name; the upstream validator warns about whole-word provider names.",
+    ),
     # (g) repository hygiene
     Rule(
         "SSG701",
