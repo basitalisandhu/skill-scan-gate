@@ -488,6 +488,16 @@ class Scanner:
         if reason:
             kind = "plugin" if plugin else "marketplace"
             self.add("SSG603", rel, locate(text, f'"{name}"'), f"{kind} name: {name}", f"{kind} name {name!r} {reason}")
+        elif plugin:
+            warning = P.plugin_validator_warning_reason(name)
+            if warning:
+                self.add(
+                    "SSG608",
+                    rel,
+                    locate(text, f'"{name}"'),
+                    f"plugin name: {name}",
+                    f"plugin name {name!r} {warning}",
+                )
 
     def _follow_mcp_ref(self, rel: str, ref: Any) -> None:
         if not isinstance(ref, str) or not ref.startswith("./") or ".." in ref.split("/"):

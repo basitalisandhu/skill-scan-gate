@@ -291,6 +291,16 @@ def reserved_plugin_reason(name: str) -> str | None:
     return None
 
 
+def plugin_validator_warning_reason(name: str) -> str | None:
+    """Low-tier warning when a plugin name has a whole-word provider brand."""
+    if reserved_plugin_reason(name):
+        return None  # The existing medium rule handles invalid names.
+    words = _SEPARATORS.sub("-", name.casefold()).strip("-").split("-")
+    if any(word in {"claude", "anthropic", "anthropics"} for word in words):
+        return "reads as one of Anthropic's own (a validator warning)"
+    return None
+
+
 ALWAYS_RUN = re.compile(
     r"\balways\b[^.\n]{0,25}?\b(?:use|invoke|run|load|apply|activate|trigger)\b"
     r"|\b(?:use|invoke|run|load|apply|activate|trigger)\b[^.\n]{0,25}?"
