@@ -488,7 +488,6 @@ class Scanner:
         if reason:
             kind = "plugin" if plugin else "marketplace"
             self.add("SSG603", rel, locate(text, f'"{name}"'), f"{kind} name: {name}", f"{kind} name {name!r} {reason}")
-
         elif plugin:
             warning = P.plugin_validator_warning_reason(name)
             if warning:
