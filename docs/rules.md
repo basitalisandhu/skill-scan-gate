@@ -43,6 +43,7 @@ Files the scanner reads: `SKILL.md`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`
 | [SSG605](#ssg605) | medium | Skill description claims it should always run |
 | [SSG606](#ssg606) | medium | Configuration file is not valid JSON |
 | [SSG607](#ssg607) | low | Skill declares unrestricted Bash access |
+
 | [SSG701](#ssg701) | low | No SECURITY.md |
 | [SSG702](#ssg702) | low | No LICENSE file |
 
@@ -315,6 +316,10 @@ Remediation: Fix the JSON syntax; Claude Code skips or rejects a file it cannot 
 What it catches: `allowed-tools` containing exact `Bash` or `Bash(*)`, in comma-separated, flow-list or block-list form. Scoped command declarations such as `Bash(git status *)` are not flagged. This is a breadth warning, not a claim that declaring a tool executes it.
 
 Remediation: Scope Bash to the commands the skill needs.
+### SSG608 Marketplace plugin source runs a command. 
+**Severity:** high
+
+**Remediation:** Review the command and its effects before installing or updating the plugin.
 
 ### SSG307
 

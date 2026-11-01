@@ -254,6 +254,13 @@ _RULES = [
         "Skill declares unrestricted Bash access",
         "Scope Bash to the commands the skill needs instead of declaring Bash or Bash(*).",
     ),
+        Rule(
+        "SSG608",
+        "manifest",
+        HIGH,
+        "Marketplace plugin source runs a command",
+        "Review the command and its effects before installing or updating the plugin; command sources execute code on the user's machine.",
+    ),
     # (g) repository hygiene
     Rule(
         "SSG701",

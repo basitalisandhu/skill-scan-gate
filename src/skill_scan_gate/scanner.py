@@ -474,13 +474,34 @@ class Scanner:
             for idx, entry in enumerate(plugins if isinstance(plugins, list) else []):
                 if not isinstance(entry, dict):
                     continue
+
                 ename = entry.get("name")
                 if not isinstance(ename, str) or not ename.strip():
                     src = json.dumps(entry.get("source", ""))
                     line = locate(text, '"plugins"', str(entry.get("source", "")))
-                    self.add("SSG601", rel, line, f"plugins[{idx}] {src}", f"plugins[{idx}] has no name")
+                    self.add(
+                        "SSG601",
+                        rel,
+                        line,
+                        f"plugins[{idx}] {src}",
+                        f"plugins[{idx}] has no name",
+                    )
                 else:
                     self._reserved_name(rel, text, ename, plugin=True)
+
+                source = entry.get("source")
+                if isinstance(source, dict) and source.get("source") == "command":
+                    command = source.get("command")
+                    if isinstance(command, str):
+                        line = locate(text, ename)
+                        self.add(
+                            "SSG608",
+                            rel,
+                            line,
+                            f"plugins[{idx}] command: {command}",
+                            f"Marketplace plugin source runs command: {command}",
+                        )
+            
         return secret_lines
 
     def _reserved_name(self, rel: str, text: str, name: str, plugin: bool) -> None:
