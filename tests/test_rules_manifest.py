@@ -14,7 +14,22 @@ def test_ssg601_plugin_without_name(tree):
 def test_ssg601_marketplace_entry_without_name(tree):
     mk = {"name": "team-tools", "owner": {"name": "x"}, "plugins": [{"source": "./p"}]}
     assert "SSG601" in rule_ids(tree({".claude-plugin/marketplace.json": mk}))
-
+def test_ssg608_marketplace_command_source(tree):
+    mk = {
+        "name": "team-tools",
+        "plugins": [
+            {
+                "name": "ide",
+                "source": {
+                    "source": "command",
+                    "command": "my-tool claude-plugin-path",
+                },
+            }
+        ],
+    }
+    assert "SSG608" in rule_ids(
+        tree({".claude-plugin/marketplace.json": mk})
+    )
 
 def test_ssg602_plugin_without_version(tree):
     assert "SSG602" in rule_ids(tree({".claude-plugin/plugin.json": {"name": "tidy-notes"}}))

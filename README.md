@@ -248,6 +248,7 @@ Every rule, what it catches, its scope and its remediation: [docs/rules.md](docs
 | SSG605 | manifest | medium | Skill description claims it should always run |
 | SSG606 | manifest | medium | Configuration file is not valid JSON |
 | SSG607 | manifest | low | Skill declares unrestricted Bash access |
+| SSG608 | manifest | high | Marketplace plugin source runs a command |
 | SSG701 | repository | low | No SECURITY.md |
 | SSG702 | repository | low | No LICENSE file |
 
